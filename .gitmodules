@@ -1,0 +1,3 @@
+[submodule "hodlcore"]
+	path = hodlcore
+	url = git@github.com:wenmoon/hodlcore.git
