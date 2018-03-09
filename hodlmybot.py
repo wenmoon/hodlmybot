@@ -4,6 +4,10 @@
 """
 HODL MY BOT - A simple crypto tracking Telegram bot
 """
+from telegram.utils.helpers import escape_markdown
+from telegram import InlineQueryResultArticle, ParseMode, \
+    InputTextMessageContent, ParseMode
+from telegram.ext import Updater, InlineQueryHandler, CommandHandler
 
 from commands import cyrotocommands
 from commands import funcommands
