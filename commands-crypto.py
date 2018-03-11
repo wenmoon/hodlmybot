@@ -3,14 +3,11 @@
 from uuid import uuid4
 import re
 from telegram.utils.helpers import escape_markdown
-from telegram import InlineQueryResultArticle, ParseMode, \
-    InputTextMessageContent, ParseMode
+from telegram import InlineQueryResultArticle, ParseMode, InputTextMessageContent, ParseMode
 from telegram.ext import Updater, InlineQueryHandler, CommandHandler
 import logging
 import math
 import random
-import datetime
-from bs4 import BeautifulSoup
 from operator import itemgetter
 
 from hodlcore import api
@@ -25,16 +22,6 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 
-def ico(bot, update, args):
-    token_id = args[0]
-    ico_text = api.get_ico_text(token_id)
-    if ico_text:
-        bot.send_message(chat_id=update.message.chat_id, text=ico_text, parse_mode=ParseMode.MARKDOWN)
-    else:
-        text = 'Sorry, I couldn\'t find *%s* on ICO Drops.'.format(token_id)
-        update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
-
-
 def search(bot, update, args):
     query = args[0].lower()
     tokens = api.search_tokens(search=query, limit=10000)
@@ -46,24 +33,65 @@ def search(bot, update, args):
         search_result = 'Found *{}* match(es):\n{}'.format(len(tokens), '\n'.join(matches))
     else:
         search_result = 'Sorry, *0 matches* for query: {}'.format()
-    
+
     update.message.reply_text(search_result, parse_mode=ParseMode.MARKDOWN)
 
 
-def webpage(bot, update, args):
-    query = args[0].lower()
-    token = api.search_token(query)
+def usd(bot, update, args):
+    token = api.get_token(args[0])
     if not token:
-	    bot.send_message(chat_id=update.message.chat_id, text='Could not find webpage for {}'.format(query), parse_mode=ParseMode.MARKDOWN)
-    bot.send_message(chat_id=update.message.chat_id, text=token.url, parse_mode=ParseMode.MARKDOWN)
+		error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap.'.format(args[0])
+        update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
+    else:
+        message = '{} 1 {} = *$({:.2f}*'.format(stringformat.emojis['dollar'], token.symbol.upper(), token.price_usd)
+        bot.send_message(chat_id=update.message.chat_id, text=message, parse_mode=ParseMode.MARKDOWN)
+
+
+def convert(bot, update, args):
+    amount = args[0]
+    from_coin = api.get_token(args[1])
+    to_coin = api.get_token(args[2])
+    new_coins = (float(amount) * from_coin.price_usd) / to_coin.price_usd
+    text = '%s %s %s = *%.8f %s*' % (stringformat.emojis['dollar'], amount, from_coin.symbol.upper(), new_coins, to_coin.symbol.upper())
+    update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
+
+
+def stats(bot, update, args):
+    # No args means global stats
+    if len(args) == 0:
+        mcap = api.get_mcap()
+        bot.send_message(chat_id=update.message.chat_id, text=mcap.summary, parse_mode=ParseMode.MARKDOWN)
+        return
+
+    token = get_coin_id(args[0])
+    if not token:
+		error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap.'.format(args[0])
+        update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
+        return
+
+    bot.send_message(chat_id=update.message.chat_id, text=token.summary, parse_mode=ParseMode.MARKDOWN)
+
+
+def compare(bot, update, args):
+    token1 = api.get_token(args[0])
+    token2 = api.get_token(args[1])
+
+    if not token1:
+    	error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap, or missing MCAP.'.format(args[0])
+        update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
+        return
+    if not token2:
+    	error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap, or missing MCAP.'format(args[1])
+        update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
+        return
+
+    bot.send_message(chat_id=update.message.chat_id, text=token1.compared_summary(token2), parse_mode=ParseMode.MARKDOWN)
 
 
 def mcap(bot, update):
     mcap_now = api.get_market_data().mcap
     mcap_db = db.MarketCapitalizationDB()
-    mcap_prev_tuple = db.get_latest()
-    mcap_prev = model.MarketCapitalization(mcap_prev_tuple[0], mcap_prev_tuple[1])
-
+    mcap_prev = db.get_latest()
     mcap_db.insert(mcap_now)
 
     change = stringformat.percent(num=((mcap_now.mcap-mcap_prev.mcap)/mcap_now.mcap)*100, emoji=False)
@@ -74,13 +102,31 @@ def mcap(bot, update):
     elif change < 0:
         adj = stringformat.emoji['skull']
         prefix = ''
-    
-    if adj:    
-        text = u'Total Market Cap *{}{:.2f}* since last check, *$%s*. %s' % (prefix, change, stringformat.large_number(mcap_now.mcap), adj)
+
+    if adj:
+        text = u'Total Market Cap *{}{:.2f}* since last check, *${}*. {}'.format(prefix, change, stringformat.large_number(mcap_now.mcap), adj)
     else:
-        text = u'Total Market Cap unchanged, *$%s*. %s' % (millify(mcap_now.mcap, short=True), emoji['carlos'])
-        
+        text = u'Total Market Cap unchanged, *${}*. {}'.format(stringformat.large_number(mcap_now.mcap), stringformat.emojis['carlos'])
+
     bot.send_message(chat_id=update.message.chat_id, text=text, parse_mode=ParseMode.MARKDOWN)
+
+
+def ico(bot, update, args):
+    token_id = args[0]
+    ico_text = api.get_ico_text(token_id)
+    if ico_text:
+        bot.send_message(chat_id=update.message.chat_id, text=ico_text, parse_mode=ParseMode.MARKDOWN)
+    else:
+        text = 'Sorry, I couldn\'t find *%s* on ICO Drops.'.format(token_id)
+        update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
+
+
+def webpage(bot, update, args):
+    query = args[0].lower()
+    token = api.search_token(query)
+    if not token:
+	    bot.send_message(chat_id=update.message.chat_id, text='Could not find webpage for {}'.format(query), parse_mode=ParseMode.MARKDOWN)
+    bot.send_message(chat_id=update.message.chat_id, text=token.url, parse_mode=ParseMode.MARKDOWN)
 
 
 def airdrops(bot, update):
@@ -124,7 +170,7 @@ def coinmarketcap(bot, update, args):
             }
         mcaps.append(d)
         # logger.info('reddit dict: %s' % d)
-        
+
     i = 1
     sorted_mcaps = sorted(mcaps, key=itemgetter('pct_week'), reverse=True)
     for m in sorted_mcaps:
@@ -152,7 +198,7 @@ def twitter(bot, update, args):
             return
         elif args[0].lower() == 'list':
             twitters = twitter_db.get_tracked()
-            message = '*Currently watching these Twitters accounts (%s total):*\n\n' % len(twitters) 
+            message = '*Currently watching these Twitters accounts (%s total):*\n\n' % len(twitters)
             message += ', '.join(twitters)
             bot.send_message(chat_id=update.message.chat_id, text=message, parse_mode=ParseMode.MARKDOWN)
             return
@@ -166,7 +212,7 @@ def twitter(bot, update, args):
     followers = []
     for user in users:
         followers.append(twitter_db.get_subscribers(user))
-        
+
     i = 1
     sorted_followers = sorted(followers, key=itemgetter('pct_week'), reverse=True)[:20]
     for s in sorted_followers:
@@ -196,7 +242,7 @@ def reddit(bot, update, args):
             return
         elif args[0].lower() == 'list':
             subreddits = reddit_db.get_tracked()
-            message = '*Currently watching these subreddits (%s total):*\n\n' % len(subreddits) 
+            message = '*Currently watching these subreddits (%s total):*\n\n' % len(subreddits)
             message += ', '.join(subreddits)
             bot.send_message(chat_id=update.message.chat_id, text=message, parse_mode=ParseMode.MARKDOWN)
             return
@@ -204,7 +250,7 @@ def reddit(bot, update, args):
         pass
 
     tracked_subreddits = reddit_db.get_tracked()
-    
+
     text = '*Reddit communities (top 20, by weekly growth) {}:*\n'.format(stringformat.emojis['charts'])
     subs = []
     for tracked_subreddit in tracked_subreddits:
@@ -216,91 +262,6 @@ def reddit(bot, update, args):
         i += 1
 
     bot.send_message(chat_id=update.message.chat_id, text=text, parse_mode=ParseMode.MARKDOWN)
-
-
-def usd(bot, update, args):
-    token = api.get_token(args[0])
-    if not token:
-		error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap.'.format(args[0])
-        update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
-        return    
-    message = '{} 1 {} = *$({:.2f}*'.format(stringformat.emojis['dollar'], token.symbol.upper(), token.price_usd)
-    bot.send_message(chat_id=update.message.chat_id, text=message, parse_mode=ParseMode.MARKDOWN)
-
-
-def convert(bot, update, args):
-    amount = args[0]
-    from_coin = api.get_token(args[1])
-    to_coin = api.get_token(args[2])
-    new_coins = (float(amount) * from_coin.price_usd) / to_coin.price_usd
-    text = '%s %s %s = *%.8f %s*' % (stringformat.emojis['dollar'], amount, from_coin.symbol.upper(), new_coins, to_coin.symbol.upper())
-    update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
-
-
-def stats(bot, update, args):
-    # No args means global stats
-    if len(args) == 0:
-        mcap = api.get_mcap()        
-        message = '*Global data {}:*'.format(stringformat.emojis['chart'])
-        message += '*Total Market Cap (USD):* ${}'.format(mcap.total_market_cap_usd)
-        message += '*Total 24h Volume (USD):* ${}'.format(mcap.volume_usd_24h)
-        message += '*BTC Dominance:* {}'.format(mca.bitcoin_percentage_of_market_cap)
-        bot.send_message(chat_id=update.message.chat_id, text=s, parse_mode=ParseMode.MARKDOWN)
-        return
-
-    token = get_coin_id(args[0])
-    if not token:
-		error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap.'.format(args[0])
-        update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
-        return    
-    s += '*Rank:* #{}'.format(token.rank)
-    s += '*Price (USD):* ${}'.format(token.price_usd)
-    s += '*Price (BTC):* ${}'.format(token.price_btc)
-    s += '*24h Volume:* ${}'.format(token.volume_usd_24h)
-    s += '*Market Cap:* ${}'.format(token.mcap)
-    s += '*Avail. Supplu:* ${}'.format(token.available_supply)
-    s += '*Total Supplu:* ${}'.format(token.total_supply)
-    s += '*Max Supply:* ${}'.format(token.max_supply)
-    s += '*Change (1h):* ${}'.format(token.percent_change_1h)
-    s += '*Change (12h):* ${}'.format(token.percent_change_12h)
-    s += '*Change (7d):* ${}'.format(token.percent_change_7d)
-    bot.send_message(chat_id=update.message.chat_id, text=s, parse_mode=ParseMode.MARKDOWN)
-
-
-def compare(bot, update, args):
-    token1 = api.get_token(args[0])
-    token2 = api.get_token(args[1])
-
-    if not token1:
-    	error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap, or missing MCAP.'.format(args[0])
-        update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
-        return
-    if not token2:
-    	error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap, or missing MCAP.'format(args[1])
-        update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
-        return
-
-    mcap_factor = token1.mcap / token2.mcap
-    mcap_price = mcap_factor * token2.price_usd
-    vol_factor = token1.volume_24h / token2.volume_24h
-
-    s = '*{} {} {}*:'.format(token1.name, stringformat.emojis['vs'], token2.name)
-    s += '*Rank:* #{} vs #{}'.format(token1.rank, token2.rank)
-    s += '*Price (USD):* ${} vs ${}'.format(token1.price_usd, token2.price_usd)
-    s += '*Price (BTC):* ${} vs ${}'.format(token1.price_btc, token2.price_btc)
-    s += '*24h Volume:* ${} vs ${}'.format(token1.volume_usd_24h, token2.volume_usd_24h)
-    s += '*Market Cap:* ${} vs ${}'.format(token1.mcap, token2.mcap)
-    s += '*Avail. Supplu:* ${} vs ${}'.format(token1.available_supply, token2.available_supply)
-    s += '*Total Supplu:* ${} vs ${}'.format(token1.total_supply, token2.total_supply)
-    s += '*Max Supply:* ${} vs ${}'.format(token1.max_supply, token2.max_supply)
-    s += '*Change (1h):* ${} vs ${}'.format(token1.percent_change_1h, token2.percent_change_1h)
-    s += '*Change (12h):* ${} vs ${}'.format(token1.percent_change_12h, token2.percent_change_12h)
-    s += '*Change (7d):* ${} vs ${}'.format(token1.percent_change_7d, token2.percent_change_7d)    
-    s += '*{} has {:.2f}x the 24h volume of {}.*'.format(token1.name, vol_factor, token2.name)
-    s += '*{} has {:.2f}x the 24h volume of {}.*'.format(token1.name, vol_factor, token2.name)
-    s += '*If {} had the market cap of {}, the USD price would be: ${} ({:.1f}x)*'.format(token1.name, token2.name, mcap_price, mcap_factor)
-
-    bot.send_message(chat_id=update.message.chat_id, text=s, parse_mode=ParseMode.MARKDOWN)
 
 
 def set_marketwatch_timer(bot, update, args, job_queue, chat_data):
@@ -340,42 +301,29 @@ def set_marketwatch_timer(bot, update, args, job_queue, chat_data):
 
 
 def marketwatch(bot, job):
-    cmc_api = 'https://api.coinmarketcap.com/v1/global/?convert=USD'
-    r = requests.get(cmc_api)
-    mcap = float(r.json()['total_market_cap_usd'])
-    mcap_prev = mcap
-    fn = 'data/mcap-major-mov.data'
+    mcap_now = api.get_market_data().mcap
+    mcap_db = db.MarketCapitalizationDB()
+    mcap_prev = db.get_latest()
+    mcap_db.insert(mcap_now)
 
-    try:
-        f = open(fn, 'r')
-        mcap_prev = float(f.readline().strip())
-        f.close()
-    except IOError:
-        f = open(fn, 'w')
-        f.write('%f' % mcap)
-        f.close()
-    f = open(fn, 'w')
-    f.write('%f' % mcap)
-    f.close()
-
-    change = ((mcap-mcap_prev)/mcap)*100
-    logger.info('old mcap: %.2f, new mcap: %.2f, threshold: %.1f, change: %.8f' % (mcap_prev, mcap, job._threshold, change))
+    change = stringformat.percent(num=((mcap_now.mcap-mcap_prev.mcap)/mcap_now.mcap)*100, emoji=False)
+    logger.info('old mcap: {:.2f}, new mcap: {:.2f}, threshold: {:.1f}, change: {:.8f}'.format(mcap_prev.mcap, mcap_now.mcap, job._threshold, change))
 
     # Do nothing if change is not significant.
     if not abs(change) > job._threshold:
         return
 
     if change > 0:
-        t = 'Double rainbow!%s%s' % (stringformat.emojis['rainbow'], stringformat.emojis['rainbow'])
+        t = 'Double rainbow!{}{}'.format(stringformat.emojis['rainbow'], stringformat.emojis['rainbow'])
         adj = stringformat.emojis['rocket']
         prefix = '+'
     elif change < 0:
-        t = 'ACHTUNG!%s' % stringformat.emojis['collision']
+        t = 'ACHTUNG!{}'.format(stringformat.emojis['collision'])
         adj = stringformat.emojis['poop']
         prefix = ''
 
     return_url = 'https://coinmarketcap.com/charts/'
-    text = u'*%s* Total Market Cap *%s%.2f%%* in %s seconds, *$%s!*\n\n%s' % (t, prefix, change, job._interval, millify(mcap, short=True), return_url)
+    text = u'*{}* Total Market Cap *{}{:.2f}%* in {} seconds, *${}!*\n\n{}'.format(t, prefix, change, job._interval, stringformat.large_number(mcap_now.mcap), return_url)
     bot.send_message(job.context, text=text, parse_mode=ParseMode.MARKDOWN)
 
 
@@ -452,8 +400,8 @@ def moonwatch(bot, job):
 
 def rankwatch(bot, job):
     logger.info('running rankwatch check')
-    top_tokens = api.get_top_tokens(limit=200)    
-    volume_threshold = 500000    
+    top_tokens = api.get_top_tokens(limit=200)
+    volume_threshold = 500000
 
     # Looking for changes in ranks
     db = TokenDB()
@@ -490,8 +438,5 @@ def rankwatch(bot, job):
             text += '    -%s*%s* (%s/%s): *%s* (%s, #%s)\n' % (
                 stringformat.emojis['triangle_up'], climber['ranks_day'], climber['ranks_week'], climber['ranks_month'],
                 climber['name'], climber['symbol'], climber['rank'])
-        text += '\nShowing All Time High ranks only.%s' % stringformat.emojis['fire'] 
+        text += '\nShowing All Time High ranks only.%s' % stringformat.emojis['fire']
         bot.send_message(job.context, text=text, parse_mode=ParseMode.MARKDOWN)
-
-
-

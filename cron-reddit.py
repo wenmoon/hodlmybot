@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-import time
-
 from hodlcore import model
 from hodlcore import api
 from hodlcore import db

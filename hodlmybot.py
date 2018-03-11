@@ -4,6 +4,7 @@
 """
 HODL MY BOT - A simple crypto tracking Telegram bot
 """
+
 from telegram.utils.helpers import escape_markdown
 from telegram import InlineQueryResultArticle, ParseMode, \
     InputTextMessageContent, ParseMode
@@ -76,16 +77,16 @@ def help(bot, update):
     /ico <coin> - Get ICO info
     /convert <amount> <from coin> <to coin> - Coin conversion
     /compare <coin1> <coin2> - Compare two coins
-    
+
     Watchers:
     /marketwatch [<threshold (%)> <interval (sec)>]|stop - Set threshold and interval for market watcher or stop
     /moonwatch [<threshold (%)> <interval (sec)>]|stop - Set threshold and interval for mooning coins
-    
+
     Intel:
     /airdrops - List of upcoming airdrops
     /reddit [add|del <subreddit> or list] - Add or list Reddit followers
     /twitter [add|del <user> or list] - Add or list Twitter followers
-    
+
     Fun:
     /hodl - Helps you decide whether or not to HODL
     /fomo - When you have FOMO
@@ -139,7 +140,7 @@ def main():
     dp.add_handler(CommandHandler("airdrops", cyrotocommands.airdrops))
     dp.add_handler(CommandHandler("airdrop", cyrotocommands.airdrops))
     dp.add_handler(CommandHandler("ad", cyrotocommands.airdrops))
-    
+
     # Fun stuff
     dp.add_handler(CommandHandler("hodl", funcommands.hodl))
     dp.add_handler(CommandHandler("fomo", funcommands.fomo))

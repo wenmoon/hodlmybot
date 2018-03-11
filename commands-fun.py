@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-def fomo():
+def fomo(bot, update):
     fomo_pics = [
         'http://recruitingdaily.com/wp-content/uploads/sites/6/2017/10/fomo1.jpg',
         'https://4.bp.blogspot.com/-AlE0-SaJD9o/VxQa79mwrQI/AAAAAAABp4g/wLAX-ziiVFACgL-EC5aFJI4NNFYdfhfigCLcB/s1600/FOMO.png',
@@ -20,11 +20,13 @@ def fomo():
 def fud(bot, update):
     fud_pics = [
         'https://cdn-images-1.medium.com/max/827/1*ulMcUA-Kmbk5vBw3vIobVw.png',
+        'https://www.smallcapasia.com/wp-content/uploads/2017/09/crypto-lingo.jpg',
+        'https://res.cloudinary.com/teepublic/image/private/s--tvWB4gBj--/t_Preview/b_rgb:ffffff,c_limit,f_jpg,h_630,q_90,w_630/v1516580235/production/designs/2297248_0.jpg'
     ]
     bot.send_photo(chat_id=update.message.chat_id, photo=random.choice(fud_pics))
 
 
-def hodl(bot, update):    
+def hodl(bot, update):
     hold_pics = [
         'http://i0.kym-cdn.com/photos/images/newsfeed/001/325/560/cbc.jpg',
         'https://i.redd.it/23hgyh92wtaz.jpg',
@@ -47,7 +49,7 @@ def carlos(bot, update):
         'https://media.tenor.com/images/8e52d994707190980f71d1867b498257/tenor.gif',
         'https://thumbs.gfycat.com/DelayedSillyImpala-size_restricted.gif',
         'https://thumbs.gfycat.com/MeaslySpecificHarrierhawk-size_restricted.gif'
-    ]    
+    ]
     bot.sendDocument(chat_id=update.message.chat_id, document=random.choice(carlos_gifs))
 
 
