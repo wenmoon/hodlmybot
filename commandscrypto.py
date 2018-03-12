@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 
-from uuid import uuid4
-import re
 from telegram.utils.helpers import escape_markdown
-from telegram import InlineQueryResultArticle, ParseMode, InputTextMessageContent, ParseMode
-from telegram.ext import Updater, InlineQueryHandler, CommandHandler
+from telegram import ParseMode
 import logging
 import math
 import random
@@ -40,7 +37,7 @@ def search(bot, update, args):
 def usd(bot, update, args):
     token = api.get_token(args[0])
     if not token:
-		error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap.'.format(args[0])
+        error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap.'.format(args[0])
         update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
     else:
         message = '{} 1 {} = *$({:.2f}*'.format(stringformat.emojis['dollar'], token.symbol.upper(), token.price_usd)
@@ -65,7 +62,7 @@ def stats(bot, update, args):
 
     token = get_coin_id(args[0])
     if not token:
-		error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap.'.format(args[0])
+        error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap.'.format(args[0])
         update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
         return
 
@@ -81,7 +78,7 @@ def compare(bot, update, args):
         update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
         return
     if not token2:
-    	error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap, or missing MCAP.'format(args[1])
+    	error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap, or missing MCAP.'.format(args[1])
         update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
         return
 
@@ -97,10 +94,10 @@ def mcap(bot, update):
     change = stringformat.percent(num=((mcap_now.mcap-mcap_prev.mcap)/mcap_now.mcap)*100, emoji=False)
     adj = ''
     if change > 0:
-        adj = stringformat.emoji['rocket']
+        adj = stringformat.emojis['rocket']
         prefix = '+'
     elif change < 0:
-        adj = stringformat.emoji['skull']
+        adj = stringformat.emojis['skull']
         prefix = ''
 
     if adj:
@@ -139,43 +136,19 @@ def airdrops(bot, update):
 
 def coinmarketcap(bot, update, args):
     token_db = db.TokenDB()
-    tokens = token_db.get_tokens()
+    tokens = token_db.get_token_ids()
 
     text = '*Coins (20 from top 300, by weekly mcap growth) %s:*\n' % stringformat.emojis['charts']
     mcaps = []
-    for token in tokens:
-        d = token_db.get_mcaps(token)
-        try:
-            d = {
-                'name': coin,
-                'now': float(d['now']),
-                'diff_today': d['now'] - d['today'],
-                'pct_today': ((d['now']/float(d['today']))-1)*100,
-                'diff_week': d['now'] - d['last_week'],
-                'pct_week':  ((d['now']/float(d['last_week']))-1)*100,
-                'diff_month': d['now'] - d['last_month'],
-                'pct_month': ((d['now']/float(d['last_month']))-1)*100
-            }
-        except TypeError:
-            # Not in db yet.
-            d = {
-                'name': sr,
-                'now': 0,
-                'diff_today': 0,
-                'pct_today': 0.0,
-                'diff_week': 0,
-                'pct_week':  0.0,
-                'diff_month': 0,
-                'pct_month': 0.0
-            }
-        mcaps.append(d)
-        # logger.info('reddit dict: %s' % d)
+    for token_id in tokens:
+        summary = token_db.get_token_mcap_summary(token_id)
+        if summary is not None:
+            mcaps.append(d)
 
     i = 1
     sorted_mcaps = sorted(mcaps, key=itemgetter('pct_week'), reverse=True)
     for m in sorted_mcaps:
-        text += '    %s. *%s*: *%s* (*W:%s*, *M:%s*)\n' % (
-            i, m['name'], float(m['now']), pct(m['pct_week'], emo=False), pct(m['pct_month'], emo=False))
+        text += '    %s. *%s*: *%s* (*W:%s*, *M:%s*)\n' % (i, m.name, m.now, stringformat.percent(m.pct_week, emo=False), stringformat.percent(m.pct_month, emo=False))
         i += 1
 
     bot.send_message(chat_id=update.message.chat_id, text=text, parse_mode=ParseMode.MARKDOWN)
@@ -254,11 +227,13 @@ def reddit(bot, update, args):
     text = '*Reddit communities (top 20, by weekly growth) {}:*\n'.format(stringformat.emojis['charts'])
     subs = []
     for tracked_subreddit in tracked_subreddits:
-        subs.append(reddit_db.get_subscribers())
+        subscribers = reddit_db.get_subscribers()
+        if subscribers is not None:
+            subs.append()
     i = 1
     sorted_subs = sorted(subs, key=itemgetter('pct_week'), reverse=True)[:20]
     for s in sorted_subs:
-        text += '    {}. *{}*: {} (W:{}, M:{})\n'.format(i, s['name'], int(s['now']), pct(s['pct_week'], emo=False), pct(s['pct_month'], emo=False))
+        text += '    {}. *{}*: {} (W:{}, M:{})\n'.format(i, s.name, s.now, stringformat.percent(m.pct_week, emo=False), stringformat.percent(m.pct_month, emo=False))
         i += 1
 
     bot.send_message(chat_id=update.message.chat_id, text=text, parse_mode=ParseMode.MARKDOWN)
@@ -387,7 +362,7 @@ def moonwatch(bot, job):
         volumes = db.get_volumes(token)
         if not volumes:
             continue
-        pct_change = (tokehn.volume_usd_24h] / volumes['last']) - 1) * 100
+        pct_change = ((token.volume_usd_24h / volumes['last']) - 1) * 100
         if pct_change >= 80 and \
             token.volume_usd_24h > volumes['a_day_ago'] and \
             token.volume_usd_24h > volumes['week_avg']: #job._threshold:

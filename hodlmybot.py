@@ -5,13 +5,13 @@
 HODL MY BOT - A simple crypto tracking Telegram bot
 """
 
-from telegram.utils.helpers import escape_markdown
-from telegram import InlineQueryResultArticle, ParseMode, \
-    InputTextMessageContent, ParseMode
+from telegram import InlineQueryResultArticle, ParseMode, InputTextMessageContent
 from telegram.ext import Updater, InlineQueryHandler, CommandHandler
 
-from commands import cyrotocommands
-from commands import funcommands
+import json
+
+import commandscrypto
+import commandsfun
 
 
 def start_default(bot, update, args, job_queue, chat_data):
@@ -33,7 +33,6 @@ def start_default(bot, update, args, job_queue, chat_data):
 
 
 def inlinequery(bot, update):
-    """Handle the inline query."""
     query = update.inline_query.query
     results = [
         InlineQueryResultArticle(
@@ -100,56 +99,59 @@ def help(bot, update):
 
 def main():
     # Create the Updater and pass it your bot's token.
-    updater = Updater("<get bot token from @botmaster>")
+    with open('api-creds-telegram.json', 'r') as file:
+        updater = Updater(json.load(file)['token'])
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
 
+    # Start command
+    dp.add_handler(CommandHandler("start", start_default, pass_args=True, pass_job_queue=True, pass_chat_data=True))
+
     # Cyrpto functionality
     dp.add_handler(CommandHandler("help", help))
     dp.add_handler(CommandHandler("h", help))
-    dp.add_handler(CommandHandler("search", cyrotocommands.search, pass_args=True))
-    dp.add_handler(CommandHandler("q", cyrotocommands.search, pass_args=True))
-    dp.add_handler(CommandHandler("mcap", cyrotocommands.mcap))
-    dp.add_handler(CommandHandler("m", cyrotocommands.mcap))
-    dp.add_handler(CommandHandler("webpage", cyrotocommands.webpage, pass_args=True))
-    dp.add_handler(CommandHandler("website", cyrotocommands.webpage, pass_args=True))
-    dp.add_handler(CommandHandler("w", cyrotocommands.webpage, pass_args=True))
-    dp.add_handler(CommandHandler("homepage", cyrotocommands.webpage, pass_args=True))
-    dp.add_handler(CommandHandler("convert", cyrotocommands.convert, pass_args=True))
-    dp.add_handler(CommandHandler("c", cyrotocommands.convert, pass_args=True))
-    dp.add_handler(CommandHandler("compare", cyrotocommands.compare, pass_args=True))
-    dp.add_handler(CommandHandler("cmp", cyrotocommands.compare, pass_args=True))
-    dp.add_handler(CommandHandler("usd", cyrotocommands.usd, pass_args=True))
-    dp.add_handler(CommandHandler("u", cyrotocommands.usd, pass_args=True))
-    dp.add_handler(CommandHandler("price", cyrotocommands.usd, pass_args=True))
-    dp.add_handler(CommandHandler("stats", cyrotocommands.stats, pass_args=True))
-    dp.add_handler(CommandHandler("s", cyrotocommands.stats, pass_args=True))
-    dp.add_handler(CommandHandler("coin", cyrotocommands.stats, pass_args=True))
-    dp.add_handler(CommandHandler("ico", cyrotocommands.ico, pass_args=True))
-    dp.add_handler(CommandHandler("i", cyrotocommands.ico, pass_args=True))
-    dp.add_handler(CommandHandler("reddit", cyrotocommands.reddit, pass_args=True))
-    dp.add_handler(CommandHandler("r", cyrotocommands.reddit, pass_args=True))
-    dp.add_handler(CommandHandler("twitter", cyrotocommands.twitter, pass_args=True))
-    dp.add_handler(CommandHandler("t", cyrotocommands.twitter, pass_args=True))
-    dp.add_handler(CommandHandler("coinmarketcap", cyrotocommands.coinmarketcap, pass_args=True))
-    dp.add_handler(CommandHandler("marketwatch", cyrotocommands.set_marketwatch_timer,  pass_args=True, pass_job_queue=True, pass_chat_data=True))
-    dp.add_handler(CommandHandler("mw", cyrotocommands.set_marketwatch_timer, pass_args=True, pass_job_queue=True, pass_chat_data=True))
-    dp.add_handler(CommandHandler("moonwatch", cyrotocommands.set_moonwatch_timer, pass_args=True, pass_job_queue=True, pass_chat_data=True))
-    dp.add_handler(CommandHandler("start", cyrotocommands.start_default, pass_args=True, pass_job_queue=True, pass_chat_data=True))
-    dp.add_handler(CommandHandler("airdrops", cyrotocommands.airdrops))
-    dp.add_handler(CommandHandler("airdrop", cyrotocommands.airdrops))
-    dp.add_handler(CommandHandler("ad", cyrotocommands.airdrops))
+    dp.add_handler(CommandHandler("search", commandscrypto.search, pass_args=True))
+    dp.add_handler(CommandHandler("q", commandscrypto.search, pass_args=True))
+    dp.add_handler(CommandHandler("mcap", commandscrypto.mcap))
+    dp.add_handler(CommandHandler("m", commandscrypto.mcap))
+    dp.add_handler(CommandHandler("webpage", commandscrypto.webpage, pass_args=True))
+    dp.add_handler(CommandHandler("website", commandscrypto.webpage, pass_args=True))
+    dp.add_handler(CommandHandler("w", commandscrypto.webpage, pass_args=True))
+    dp.add_handler(CommandHandler("homepage", commandscrypto.webpage, pass_args=True))
+    dp.add_handler(CommandHandler("convert", commandscrypto.convert, pass_args=True))
+    dp.add_handler(CommandHandler("c", commandscrypto.convert, pass_args=True))
+    dp.add_handler(CommandHandler("compare", commandscrypto.compare, pass_args=True))
+    dp.add_handler(CommandHandler("cmp", commandscrypto.compare, pass_args=True))
+    dp.add_handler(CommandHandler("usd", commandscrypto.usd, pass_args=True))
+    dp.add_handler(CommandHandler("u", commandscrypto.usd, pass_args=True))
+    dp.add_handler(CommandHandler("price", commandscrypto.usd, pass_args=True))
+    dp.add_handler(CommandHandler("stats", commandscrypto.stats, pass_args=True))
+    dp.add_handler(CommandHandler("s", commandscrypto.stats, pass_args=True))
+    dp.add_handler(CommandHandler("coin", commandscrypto.stats, pass_args=True))
+    dp.add_handler(CommandHandler("ico", commandscrypto.ico, pass_args=True))
+    dp.add_handler(CommandHandler("i", commandscrypto.ico, pass_args=True))
+    dp.add_handler(CommandHandler("reddit", commandscrypto.reddit, pass_args=True))
+    dp.add_handler(CommandHandler("r", commandscrypto.reddit, pass_args=True))
+    dp.add_handler(CommandHandler("twitter", commandscrypto.twitter, pass_args=True))
+    dp.add_handler(CommandHandler("t", commandscrypto.twitter, pass_args=True))
+    dp.add_handler(CommandHandler("coinmarketcap", commandscrypto.coinmarketcap, pass_args=True))
+    dp.add_handler(CommandHandler("marketwatch", commandscrypto.set_marketwatch_timer,  pass_args=True, pass_job_queue=True, pass_chat_data=True))
+    dp.add_handler(CommandHandler("mw", commandscrypto.set_marketwatch_timer, pass_args=True, pass_job_queue=True, pass_chat_data=True))
+    dp.add_handler(CommandHandler("moonwatch", commandscrypto.set_moonwatch_timer, pass_args=True, pass_job_queue=True, pass_chat_data=True))
+    dp.add_handler(CommandHandler("airdrops", commandscrypto.airdrops))
+    dp.add_handler(CommandHandler("airdrop", commandscrypto.airdrops))
+    dp.add_handler(CommandHandler("ad", commandscrypto.airdrops))
 
     # Fun stuff
-    dp.add_handler(CommandHandler("hodl", funcommands.hodl))
-    dp.add_handler(CommandHandler("fomo", funcommands.fomo))
-    dp.add_handler(CommandHandler("fud", funcommands.fud))
-    dp.add_handler(CommandHandler("carlos", funcommands.carlos))
-    dp.add_handler(CommandHandler("rackle", funcommands.racklehahn))
-    dp.add_handler(CommandHandler("shouldi", funcommands.shouldi))
-    dp.add_handler(CommandHandler("si", funcommands.shouldi))
-    dp.add_handler(CommandHandler("diceroll", funcommands.diceroll))
+    dp.add_handler(CommandHandler("hodl", commandsfun.hodl))
+    dp.add_handler(CommandHandler("fomo", commandsfun.fomo))
+    dp.add_handler(CommandHandler("fud", commandsfun.fud))
+    dp.add_handler(CommandHandler("carlos", commandsfun.carlos))
+    dp.add_handler(CommandHandler("rackle", commandsfun.racklehahn))
+    dp.add_handler(CommandHandler("shouldi", commandsfun.shouldi))
+    dp.add_handler(CommandHandler("si", commandsfun.shouldi))
+    dp.add_handler(CommandHandler("diceroll", commandsfun.diceroll))
 
     # on noncommand i.e message - echo the message on Telegram
     dp.add_handler(InlineQueryHandler(inlinequery))
