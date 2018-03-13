@@ -14,24 +14,6 @@ import commandscrypto
 import commandsfun
 
 
-def start_default(bot, update, args, job_queue, chat_data):
-    # Start default jobs
-    chat_id = update.message.chat_id
-    job = job_queue.run_repeating(marketwatch, 300, context=chat_id)
-    job._threshold = 0.7
-    job._interval = 300
-    chat_data['job'] = job
-
-    job = job_queue.run_repeating(moonwatch, 900, context=chat_id)
-    job._threshold = 10
-    job._interval = 900
-    chat_data['job'] = job
-
-    # Start rank watch
-    job = job_queue.run_repeating(rankwatch, 43200, context=chat_id)
-    chat_data['job'] = job
-
-
 def inlinequery(bot, update):
     query = update.inline_query.query
     results = [
@@ -106,7 +88,7 @@ def main():
     dp = updater.dispatcher
 
     # Start command
-    dp.add_handler(CommandHandler("start", start_default, pass_args=True, pass_job_queue=True, pass_chat_data=True))
+    dp.add_handler(CommandHandler("start", commandscrypto.start_default, pass_args=True, pass_job_queue=True, pass_chat_data=True))
 
     # Cyrpto functionality
     dp.add_handler(CommandHandler("help", help))

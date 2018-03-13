@@ -18,6 +18,23 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 logger = logging.getLogger(__name__)
 
+def start_default(bot, update, args, job_queue, chat_data):
+    # Start default jobs
+    chat_id = update.message.chat_id
+    job = job_queue.run_repeating(marketwatch, 300, context=chat_id)
+    job._threshold = 0.7
+    job._interval = 300
+    chat_data['job'] = job
+
+    job = job_queue.run_repeating(moonwatch, 900, context=chat_id)
+    job._threshold = 10
+    job._interval = 900
+    chat_data['job'] = job
+
+    # Start rank watch
+    job = job_queue.run_repeating(rankwatch, 43200, context=chat_id)
+    chat_data['job'] = job
+
 
 def search(bot, update, args):
     query = args[0].lower()
@@ -35,21 +52,21 @@ def search(bot, update, args):
 
 
 def usd(bot, update, args):
-    token = api.get_token(args[0])
+    token = api.search_token(args[0])
     if not token:
         error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap.'.format(args[0])
         update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
     else:
-        message = '{} 1 {} = *$({:.2f}*'.format(stringformat.emojis['dollar'], token.symbol.upper(), token.price_usd)
+        message = '{} 1 {} = *$({:.2f}*'.format(stringformat.emoji('dollar'), token.symbol.upper(), token.price_usd)
         bot.send_message(chat_id=update.message.chat_id, text=message, parse_mode=ParseMode.MARKDOWN)
 
 
 def convert(bot, update, args):
     amount = args[0]
-    from_coin = api.get_token(args[1])
-    to_coin = api.get_token(args[2])
+    from_coin = api.search_token(args[1])
+    to_coin = api.search_token(args[2])
     new_coins = (float(amount) * from_coin.price_usd) / to_coin.price_usd
-    text = '%s %s %s = *%.8f %s*' % (stringformat.emojis['dollar'], amount, from_coin.symbol.upper(), new_coins, to_coin.symbol.upper())
+    text = '%s %s %s = *%.8f %s*' % (stringformat.emoji('dollar'), amount, from_coin.symbol.upper(), new_coins, to_coin.symbol.upper())
     update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
 
 
@@ -57,16 +74,16 @@ def stats(bot, update, args):
     # No args means global stats
     if len(args) == 0:
         mcap = api.get_mcap()
-        bot.send_message(chat_id=update.message.chat_id, text=mcap.summary, parse_mode=ParseMode.MARKDOWN)
+        bot.send_message(chat_id=update.message.chat_id, text=mcap.summary(), parse_mode=ParseMode.MARKDOWN)
         return
 
-    token = get_coin_id(args[0])
+    token = api.search_token(args[0])
     if not token:
         error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap.'.format(args[0])
         update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
         return
 
-    bot.send_message(chat_id=update.message.chat_id, text=token.summary, parse_mode=ParseMode.MARKDOWN)
+    bot.send_message(chat_id=update.message.chat_id, text=token.summary(), parse_mode=ParseMode.MARKDOWN)
 
 
 def compare(bot, update, args):
@@ -94,16 +111,16 @@ def mcap(bot, update):
     change = stringformat.percent(num=((mcap_now.mcap-mcap_prev.mcap)/mcap_now.mcap)*100, emoji=False)
     adj = ''
     if change > 0:
-        adj = stringformat.emojis['rocket']
+        adj = stringformat.emoji('rocket')
         prefix = '+'
     elif change < 0:
-        adj = stringformat.emojis['skull']
+        adj = stringformat.emoji('skull')
         prefix = ''
 
     if adj:
         text = u'Total Market Cap *{}{:.2f}* since last check, *${}*. {}'.format(prefix, change, stringformat.large_number(mcap_now.mcap), adj)
     else:
-        text = u'Total Market Cap unchanged, *${}*. {}'.format(stringformat.large_number(mcap_now.mcap), stringformat.emojis['carlos'])
+        text = u'Total Market Cap unchanged, *${}*. {}'.format(stringformat.large_number(mcap_now.mcap), stringformat.emoji('carlos'))
 
     bot.send_message(chat_id=update.message.chat_id, text=text, parse_mode=ParseMode.MARKDOWN)
 
@@ -138,7 +155,7 @@ def coinmarketcap(bot, update, args):
     token_db = db.TokenDB()
     tokens = token_db.get_token_ids()
 
-    text = '*Coins (20 from top 300, by weekly mcap growth) %s:*\n' % stringformat.emojis['charts']
+    text = '*Coins (20 from top 300, by weekly mcap growth) {}:*\n'.format(stringformat.emoji('charts'))
     mcaps = []
     for token_id in tokens:
         summary = token_db.get_token_mcap_summary(token_id)
@@ -180,7 +197,7 @@ def twitter(bot, update, args):
 
     users = twitter_db.get_tracked()
 
-    text = '*Twitter users (top 20, by weekly growth) %s:*\n' % stringformat.emojis['charts']
+    text = '*Twitter users (top 20, by weekly growth) {}:*\n'.format(stringformat.emoji('charts'))
 
     followers = []
     for user in users:
@@ -190,7 +207,7 @@ def twitter(bot, update, args):
     sorted_followers = sorted(followers, key=itemgetter('pct_week'), reverse=True)[:20]
     for s in sorted_followers:
         text += '    %s. *%s*: %s (W:%s, M:%s)\n' % (
-            i, s['name'], int(s['now']), pct(s['pct_week'], emo=False), pct(s['pct_month'], emo=False))
+            i, s['name'], int(s['now']), stringformat.percent(s['pct_week'], emoji=False), stringformat.percent(s['pct_month'], emoji=False))
         i += 1
 
     bot.send_message(chat_id=update.message.chat_id, text=text, parse_mode=ParseMode.MARKDOWN)
@@ -224,7 +241,7 @@ def reddit(bot, update, args):
 
     tracked_subreddits = reddit_db.get_tracked()
 
-    text = '*Reddit communities (top 20, by weekly growth) {}:*\n'.format(stringformat.emojis['charts'])
+    text = '*Reddit communities (top 20, by weekly growth) {}:*\n'.format(stringformat.emoji('charts'))
     subs = []
     for tracked_subreddit in tracked_subreddits:
         subscribers = reddit_db.get_subscribers()
@@ -289,12 +306,12 @@ def marketwatch(bot, job):
         return
 
     if change > 0:
-        t = 'Double rainbow!{}{}'.format(stringformat.emojis['rainbow'], stringformat.emojis['rainbow'])
-        adj = stringformat.emojis['rocket']
+        t = 'Double rainbow!{}{}'.format(stringformat.emoji('rainbow'), stringformat.emoji('rainbow'))
+        adj = stringformat.emoji('rocket')
         prefix = '+'
     elif change < 0:
-        t = 'ACHTUNG!{}'.format(stringformat.emojis['collision'])
-        adj = stringformat.emojis['poop']
+        t = 'ACHTUNG!{}'.format(stringformat.emoji('collision'))
+        adj = stringformat.emoji('poop')
         prefix = ''
 
     return_url = 'https://coinmarketcap.com/charts/'
@@ -354,7 +371,7 @@ def moonwatch(bot, job):
             continue
         text = u'*%s* (%s, #%s) *+%.2f%%* in the last hour, trading at *$%.2f*. BTC $%.2f, ETH $%.2f. %s' % (
             token.name, token.symbol, token.rank, token.percent_change_1h,
-            token.price_usd, btc_usd, eth_usd, stringformat.emojis['rocket'])
+            token.price_usd, btc_usd, eth_usd, stringformat.emoji('rocket'))
         bot.send_message(job.context, text=text, parse_mode=ParseMode.MARKDOWN)
 
         # Change in volume
@@ -368,7 +385,7 @@ def moonwatch(bot, job):
             token.volume_usd_24h > volumes['week_avg']: #job._threshold:
             text = '*24h volume* of *%s* (%s, #%s) increased by *%.2f%%* to *$%d*. Last $%d, yesterday $%d, week avg $%d. %s' % (
                 token.name, token.symbol, token.rank, pct_change, token.volume_usd_24h,
-                volumes['last'], volumes['a_day_ago'], volumes['week_avg'], stringformat.emojis['fire'])
+                volumes['last'], volumes['a_day_ago'], volumes['week_avg'], stringformat.emoji('fire'))
             logger.info('%s is trading %.2f%% above last check' % (token.id, pct_change))
             bot.send_message(job.context, text=text, parse_mode=ParseMode.MARKDOWN)
 
@@ -411,7 +428,7 @@ def rankwatch(bot, job):
         for climber in sorted_climbers:
             #            - 6/12/24 ranks, #34 ZClassic (ZCL)
             text += '    -%s*%s* (%s/%s): *%s* (%s, #%s)\n' % (
-                stringformat.emojis['triangle_up'], climber['ranks_day'], climber['ranks_week'], climber['ranks_month'],
+                stringformat.emoji('triangle_up'), climber['ranks_day'], climber['ranks_week'], climber['ranks_month'],
                 climber['name'], climber['symbol'], climber['rank'])
-        text += '\nShowing All Time High ranks only.%s' % stringformat.emojis['fire']
+        text += '\nShowing All Time High ranks only.%s' % stringformat.emoji('fire')
         bot.send_message(job.context, text=text, parse_mode=ParseMode.MARKDOWN)
