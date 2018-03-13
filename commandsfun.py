@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import random
+
 def fomo(bot, update):
     fomo_pics = [
         'http://recruitingdaily.com/wp-content/uploads/sites/6/2017/10/fomo1.jpg',
