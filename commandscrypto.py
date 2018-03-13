@@ -6,6 +6,7 @@ import logging
 import math
 import random
 from operator import itemgetter
+from operator import attrgetter
 
 from hodlcore import api
 from hodlcore import model
@@ -39,12 +40,12 @@ def start_default(bot, update, args, job_queue, chat_data):
 def search(bot, update, args):
     query = args[0].lower()
     tokens = api.search_tokens(search=query, limit=10000)
-    i = 0
-    for token in tokens:
-        matches.append('{}. ID: *{}*, Name: {} ({}), rank #{})'.format(i, token.rank, token.id, token.name, token.symbol))
-        i += 1
+    sorted_tokens = sorted(tokens, key=attrgetter('rank'), reverse=False)
+    matches = []
+    for token in sorted_tokens:
+        matches.append('\t#{}: *{} ({})*, ID: {}'.format(token.rank, token.name, token.symbol, token.id))
     if len(tokens) > 0:
-        search_result = 'Found *{}* match(es):\n{}'.format(len(tokens), '\n'.join(matches))
+        search_result = 'Found *{}* match(es), sorted by rank:\n{}'.format(len(tokens), '\n'.join(matches))
     else:
         search_result = 'Sorry, *0 matches* for query: {}'.format()
 
