@@ -103,12 +103,12 @@ def compare(bot, update, args):
 
 
 def mcap(bot, update):
-    mcap_now = api.get_market_data().mcap
+    mcap_now = api.get_mcap()
     mcap_db = db.MarketCapitalizationDB()
-    mcap_prev = db.get_latest()
+    mcap_prev = mcap_db.get_latest()
     mcap_db.insert(mcap_now)
 
-    change = stringformat.percent(num=((mcap_now.mcap-mcap_prev.mcap)/mcap_now.mcap)*100, emoji=False)
+    change = stringformat.percent(num=((mcap_now.mcap_usd - mcap_prev.mcap_usd) / mcap_now.mcap_usd) * 100, emo=False)
     adj = ''
     if change > 0:
         adj = stringformat.emoji('rocket')
@@ -118,9 +118,9 @@ def mcap(bot, update):
         prefix = ''
 
     if adj:
-        text = u'Total Market Cap *{}{:.2f}* since last check, *${}*. {}'.format(prefix, change, stringformat.large_number(mcap_now.mcap), adj)
+        text = 'Total Market Cap *{}{}* since last check, *${}*. {}'.format(prefix, change, stringformat.large_number(mcap_now.mcap_usd), adj)
     else:
-        text = u'Total Market Cap unchanged, *${}*. {}'.format(stringformat.large_number(mcap_now.mcap), stringformat.emoji('carlos'))
+        text = 'Total Market Cap unchanged, *${}*. {}'.format(stringformat.large_number(mcap_now.mcap), stringformat.emoji('carlos'))
 
     bot.send_message(chat_id=update.message.chat_id, text=text, parse_mode=ParseMode.MARKDOWN)
 
@@ -207,7 +207,7 @@ def twitter(bot, update, args):
     sorted_followers = sorted(followers, key=itemgetter('pct_week'), reverse=True)[:20]
     for s in sorted_followers:
         text += '    %s. *%s*: %s (W:%s, M:%s)\n' % (
-            i, s['name'], int(s['now']), stringformat.percent(s['pct_week'], emoji=False), stringformat.percent(s['pct_month'], emoji=False))
+            i, s['name'], int(s['now']), stringformat.percent(s['pct_week'], emo=False), stringformat.percent(s['pct_month'], emo=False))
         i += 1
 
     bot.send_message(chat_id=update.message.chat_id, text=text, parse_mode=ParseMode.MARKDOWN)
@@ -293,12 +293,12 @@ def set_marketwatch_timer(bot, update, args, job_queue, chat_data):
 
 
 def marketwatch(bot, job):
-    mcap_now = api.get_market_data().mcap
+    mcap_now = api.get_mcap()
     mcap_db = db.MarketCapitalizationDB()
-    mcap_prev = db.get_latest()
+    mcap_prev = mcap_db.get_latest()
     mcap_db.insert(mcap_now)
 
-    change = stringformat.percent(num=((mcap_now.mcap-mcap_prev.mcap)/mcap_now.mcap)*100, emoji=False)
+    change = stringformat.percent(num=((mcap_now.mcap_usd - mcap_prev.mcap_usd) / mcap_now.mcap_usd) * 100, emo=False)
     logger.info('old mcap: {:.2f}, new mcap: {:.2f}, threshold: {:.1f}, change: {:.8f}'.format(mcap_prev.mcap, mcap_now.mcap, job._threshold, change))
 
     # Do nothing if change is not significant.
@@ -315,7 +315,7 @@ def marketwatch(bot, job):
         prefix = ''
 
     return_url = 'https://coinmarketcap.com/charts/'
-    text = u'*{}* Total Market Cap *{}{:.2f}%* in {} seconds, *${}!*\n\n{}'.format(t, prefix, change, job._interval, stringformat.large_number(mcap_now.mcap), return_url)
+    text = '*{}* Total Market Cap *{}{}%* in {} seconds, *${}!*\n\n{}'.format(t, prefix, change, job._interval, stringformat.large_number(mcap_now.mcap_usd), return_url)
     bot.send_message(job.context, text=text, parse_mode=ParseMode.MARKDOWN)
 
 
@@ -369,7 +369,7 @@ def moonwatch(bot, job):
         # Change in price
         if not token.percent_change_1h >= job._threshold:
             continue
-        text = u'*%s* (%s, #%s) *+%.2f%%* in the last hour, trading at *$%.2f*. BTC $%.2f, ETH $%.2f. %s' % (
+        text = '*%s* (%s, #%s) *+%.2f%%* in the last hour, trading at *$%.2f*. BTC $%.2f, ETH $%.2f. %s' % (
             token.name, token.symbol, token.rank, token.percent_change_1h,
             token.price_usd, btc_usd, eth_usd, stringformat.emoji('rocket'))
         bot.send_message(job.context, text=text, parse_mode=ParseMode.MARKDOWN)
