@@ -57,7 +57,7 @@ def usd(bot, update, args):
         error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap.'.format(args[0])
         update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
     else:
-        message = '{} 1 {} = *$({:.2f}*'.format(stringformat.emoji('dollar'), token.symbol.upper(), token.price_usd)
+        message = '{} 1 {} = *${:.2f}*'.format(stringformat.emoji('dollar'), token.symbol.upper(), token.price)
         bot.send_message(chat_id=update.message.chat_id, text=message, parse_mode=ParseMode.MARKDOWN)
 
 
