@@ -63,10 +63,10 @@ def usd(bot, update, args):
 
 def convert(bot, update, args):
     amount = args[0]
-    from_coin = api.search_token(args[1])
-    to_coin = api.search_token(args[2])
-    new_coins = (float(amount) * from_coin.price_usd) / to_coin.price_usd
-    text = '%s %s %s = *%.8f %s*' % (stringformat.emoji('dollar'), amount, from_coin.symbol.upper(), new_coins, to_coin.symbol.upper())
+    from_token = api.search_token(args[1])
+    to_token = api.search_token(args[2])
+    converted_amount = (float(amount) * from_token.price) / to_token.price
+    text = '{} {} {} = *{:.8f} {}*'.format(stringformat.emoji('dollar'), amount, from_token.symbol.upper(), converted_amount, to_token.symbol.upper())
     update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
 
 
