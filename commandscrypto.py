@@ -74,7 +74,7 @@ def stats(bot, update, args):
     # No args means global stats
     if len(args) == 0:
         mcap = api.get_mcap()
-        bot.send_message(chat_id=update.message.chat_id, text=mcap.summary(), parse_mode=ParseMode.MARKDOWN)
+        bot.send_message(chat_id=update.message.chat_id, text=stringformat.mcap_summary(mcap), parse_mode=ParseMode.MARKDOWN)
         return
 
     token = api.search_token(args[0])
@@ -83,12 +83,12 @@ def stats(bot, update, args):
         update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
         return
 
-    bot.send_message(chat_id=update.message.chat_id, text=token.summary(), parse_mode=ParseMode.MARKDOWN)
+    bot.send_message(chat_id=update.message.chat_id, text=stringformat.token_summary(token), parse_mode=ParseMode.MARKDOWN)
 
 
 def compare(bot, update, args):
-    token1 = api.get_token(args[0])
-    token2 = api.get_token(args[1])
+    token1 = api.search_token(args[0])
+    token2 = api.search_token(args[1])
 
     if not token1:
     	error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap, or missing MCAP.'.format(args[0])
@@ -99,7 +99,7 @@ def compare(bot, update, args):
         update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
         return
 
-    bot.send_message(chat_id=update.message.chat_id, text=token1.compared_summary(token2), parse_mode=ParseMode.MARKDOWN)
+    bot.send_message(chat_id=update.message.chat_id, text=stringformat.token_compared_summary(token1, token2), parse_mode=ParseMode.MARKDOWN)
 
 
 def mcap(bot, update):
