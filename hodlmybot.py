@@ -9,10 +9,15 @@ from telegram import InlineQueryResultArticle, ParseMode, InputTextMessageConten
 from telegram.ext import Updater, InlineQueryHandler, CommandHandler
 
 import json
+import logging
 
 import commandscrypto
 import commandsfun
 
+# Enable logging
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def inlinequery(bot, update):
     query = update.inline_query.query

@@ -2,9 +2,10 @@
 
 from telegram.utils.helpers import escape_markdown
 from telegram import ParseMode
+
 import logging
 import math
-import random
+
 from operator import itemgetter
 from operator import attrgetter
 
@@ -197,18 +198,16 @@ def twitter(bot, update, args):
         pass
 
     users = twitter_db.get_tracked()
-
-    text = '*Twitter users (top 20, by weekly growth) {}:*\n'.format(stringformat.emoji('charts'))
-
     followers = []
     for user in users:
-        followers.append(twitter_db.get_subscribers(user))
-
+        subscribers = twitter_db.get_subscribers(user)
+        if subscribers is not None:
+            followers.append(subscribers)
     i = 1
-    sorted_followers = sorted(followers, key=itemgetter('pct_week'), reverse=True)[:20]
+    sorted_followers = sorted(followers, key=attrgetter('pct_week'), reverse=True)[:20]
+    text = '*Twitter users (top 20, by weekly growth) {}:*\n'.format(stringformat.emoji('charts'))
     for s in sorted_followers:
-        text += '    %s. *%s*: %s (W:%s, M:%s)\n' % (
-            i, s['name'], int(s['now']), stringformat.percent(s['pct_week'], emo=False), stringformat.percent(s['pct_month'], emo=False))
+        text += '    {}. *{}*: {} (W:{}, M:{})\n'.format(i, s.name, s.now, stringformat.percent(s.pct_week, emo=False), stringformat.percent(s.pct_month, emo=False))
         i += 1
 
     bot.send_message(chat_id=update.message.chat_id, text=text, parse_mode=ParseMode.MARKDOWN)
@@ -241,17 +240,16 @@ def reddit(bot, update, args):
         pass
 
     tracked_subreddits = reddit_db.get_tracked()
-
-    text = '*Reddit communities (top 20, by weekly growth) {}:*\n'.format(stringformat.emoji('charts'))
     subs = []
     for tracked_subreddit in tracked_subreddits:
-        subscribers = reddit_db.get_subscribers()
+        subscribers = reddit_db.get_subscribers(tracked_subreddit)
         if subscribers is not None:
-            subs.append()
+            subs.append(subscribers)
     i = 1
-    sorted_subs = sorted(subs, key=itemgetter('pct_week'), reverse=True)[:20]
+    sorted_subs = sorted(subs, key=attrgetter('pct_week'), reverse=True)[:20]
+    text = '*Reddit communities (top 20, by weekly growth) {}:*\n'.format(stringformat.emoji('charts'))
     for s in sorted_subs:
-        text += '    {}. *{}*: {} (W:{}, M:{})\n'.format(i, s.name, s.now, stringformat.percent(m.pct_week, emo=False), stringformat.percent(m.pct_month, emo=False))
+        text += '    {}. *{}*: {} (W:{}, M:{})\n'.format(i, s.name, s.now, stringformat.percent(s.pct_week, emo=False), stringformat.percent(s.pct_month, emo=False))
         i += 1
 
     bot.send_message(chat_id=update.message.chat_id, text=text, parse_mode=ParseMode.MARKDOWN)
