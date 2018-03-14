@@ -16,5 +16,6 @@ def main():
         if twitter is not None:
             database.insert(twitter)
 
+
 if __name__ == '__main__':
     main()
