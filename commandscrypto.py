@@ -85,7 +85,11 @@ def stats(bot, update, args):
         update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
         return
 
-    bot.send_message(chat_id=update.message.chat_id, text=stringformat.token_summary(token), parse_mode=ParseMode.MARKDOWN)
+    if not token.is_bitcoin():
+        summary_btc = db.TokenDB().get_prices_btc(token.id)
+    else:
+        summary_btc = None
+    bot.send_message(chat_id=update.message.chat_id, text=stringformat.token_summary(token, summary_btc), parse_mode=ParseMode.MARKDOWN)
 
 
 def compare(bot, update, args):
@@ -160,7 +164,7 @@ def coinmarketcap(bot, update, args):
     text = '*Coins (20 from top 300, by weekly mcap growth) {}:*\n'.format(stringformat.emoji('charts'))
     mcaps = []
     for token_id in tokens:
-        summary = token_db.get_token_mcap_summary(token_id)
+        summary = token_db.get_mcaps(token_id)
         if summary is not None:
             mcaps.append(d)
 
