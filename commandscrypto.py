@@ -39,37 +39,46 @@ def start_default(bot, update, args, job_queue, chat_data):
 
 
 def search(bot, update, args):
-    query = args[0].lower()
-    tokens = api.search_tokens(search=query, limit=10000)
-    sorted_tokens = sorted(tokens, key=attrgetter('rank'), reverse=False)
-    matches = []
-    for token in sorted_tokens:
-        matches.append('\t#{}: *{} ({})*, ID: {}'.format(token.rank, token.name, token.symbol, token.id))
-    if len(tokens) > 0:
-        search_result = 'Found *{}* match(es), sorted by rank:\n{}'.format(len(tokens), '\n'.join(matches))
-    else:
-        search_result = 'Sorry, *0 matches* for query: {}'.format()
+    try:
+        query = args[0].lower()
+        tokens = api.search_tokens(search=query, limit=10000)
+        sorted_tokens = sorted(tokens, key=attrgetter('rank'), reverse=False)
+        matches = []
+        for token in sorted_tokens:
+            matches.append('\t#{}: *{} ({})*, ID: {}'.format(token.rank, token.name, token.symbol, token.id))
+        if len(tokens) > 0:
+            search_result = 'Found *{}* match(es), sorted by rank:\n{}'.format(len(tokens), '\n'.join(matches))
+        else:
+            search_result = 'Sorry, *0 matches* for query: {}'.format()
 
-    update.message.reply_text(search_result, parse_mode=ParseMode.MARKDOWN)
+        update.message.reply_text(search_result, parse_mode=ParseMode.MARKDOWN)
+    except (IndexError, ValueError):
+        update.message.reply_text('Usage: /search <query>')
 
 
 def usd(bot, update, args):
-    token = api.search_token(args[0])
-    if not token:
-        error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap.'.format(args[0])
-        update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
-    else:
-        message = '{} 1 {} = *${:.2f}*'.format(stringformat.emoji('dollar'), token.symbol.upper(), token.price)
-        bot.send_message(chat_id=update.message.chat_id, text=message, parse_mode=ParseMode.MARKDOWN)
+    try:
+        token = api.search_token(args[0])
+        if not token:
+            error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap.'.format(args[0])
+            update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
+        else:
+            message = '{} 1 {} = *${:.2f}*'.format(stringformat.emoji('dollar'), token.symbol.upper(), token.price)
+            bot.send_message(chat_id=update.message.chat_id, text=message, parse_mode=ParseMode.MARKDOWN)
+    except (IndexError, ValueError):
+        update.message.reply_text('Usage: /usd <token>')
 
 
 def convert(bot, update, args):
-    amount = args[0]
-    from_token = api.search_token(args[1])
-    to_token = api.search_token(args[2])
-    converted_amount = (float(amount) * from_token.price) / to_token.price
-    text = '{} {} {} = *{:.8f} {}*'.format(stringformat.emoji('dollar'), amount, from_token.symbol.upper(), converted_amount, to_token.symbol.upper())
-    update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
+    try:
+        amount = args[0]
+        from_token = api.search_token(args[1])
+        to_token = api.search_token(args[2])
+        converted_amount = (float(amount) * from_token.price) / to_token.price
+        text = '{} {} {} = *{:.8f} {}*'.format(stringformat.emoji('dollar'), amount, from_token.symbol.upper(), converted_amount, to_token.symbol.upper())
+        update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
+    except (IndexError, ValueError):
+        update.message.reply_text('Usage: /convert <amount> <from token> <to token>')
 
 
 def stats(bot, update, args):
@@ -85,27 +94,29 @@ def stats(bot, update, args):
         update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
         return
 
+    summary_btc = None
     if not token.is_bitcoin():
         summary_btc = db.TokenDB().get_prices_btc(token.id)
-    else:
-        summary_btc = None
     bot.send_message(chat_id=update.message.chat_id, text=stringformat.token_summary(token, summary_btc), parse_mode=ParseMode.MARKDOWN)
 
 
 def compare(bot, update, args):
-    token1 = api.search_token(args[0])
-    token2 = api.search_token(args[1])
+    try:
+        token1 = api.search_token(args[0])
+        token2 = api.search_token(args[1])
 
-    if not token1:
-    	error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap, or missing MCAP.'.format(args[0])
-        update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
-        return
-    if not token2:
-    	error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap, or missing MCAP.'.format(args[1])
-        update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
-        return
+        if not token1:
+            error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap, or missing MCAP.'.format(args[0])
+            update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
+            return
+        if not token2:
+            error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap, or missing MCAP.'.format(args[1])
+            update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
+            return
 
-    bot.send_message(chat_id=update.message.chat_id, text=stringformat.token_compared_summary(token1, token2), parse_mode=ParseMode.MARKDOWN)
+        bot.send_message(chat_id=update.message.chat_id, text=stringformat.token_compared_summary(token1, token2), parse_mode=ParseMode.MARKDOWN)
+    except (IndexError, ValueError):
+        update.message.reply_text('Usage: /compare <token1> <token2>')
 
 
 def mcap(bot, update):
@@ -159,19 +170,19 @@ def airdrops(bot, update):
 
 def coinmarketcap(bot, update, args):
     token_db = db.TokenDB()
-    tokens = token_db.get_token_ids()
+    tokens = api.get_top_tokens(limit=200)
 
     text = '*Coins (20 from top 300, by weekly mcap growth) {}:*\n'.format(stringformat.emoji('charts'))
     mcaps = []
-    for token_id in tokens:
-        summary = token_db.get_mcaps(token_id)
+    for token in tokens:
+        summary = token_db.get_mcaps(token.id)
         if summary is not None:
-            mcaps.append(d)
+            mcaps.append(summary)
 
     i = 1
-    sorted_mcaps = sorted(mcaps, key=itemgetter('pct_week'), reverse=True)
+    sorted_mcaps = sorted(mcaps, key=attrgetter('pct_week'), reverse=True)[:20]
     for m in sorted_mcaps:
-        text += '    %s. *%s*: *%s* (*W:%s*, *M:%s*)\n' % (i, m.name, m.now, stringformat.percent(m.pct_week, emo=False), stringformat.percent(m.pct_month, emo=False))
+        text += '    {}. *{}*: {} (W:{}, M:{})\n'.format(i, m.name, m.now, stringformat.percent(m.pct_week, emo=False), stringformat.percent(m.pct_month, emo=False))
         i += 1
 
     bot.send_message(chat_id=update.message.chat_id, text=text, parse_mode=ParseMode.MARKDOWN)
@@ -211,7 +222,7 @@ def twitter(bot, update, args):
     sorted_followers = sorted(followers, key=attrgetter('pct_week'), reverse=True)[:20]
     text = '*Twitter users (top 20, by weekly growth) {}:*\n'.format(stringformat.emoji('charts'))
     for s in sorted_followers:
-        text += '    {}. *{}*: {} (W:{}, M:{})\n'.format(i, s.name, s.now, stringformat.percent(s.pct_week, emo=False), stringformat.percent(s.pct_month, emo=False))
+        text += '    {}. *{}*: {} (W: {}, M: {})\n'.format(i, s.name, s.now, stringformat.percent(s.pct_week, emo=False), stringformat.percent(s.pct_month, emo=False))
         i += 1
 
     bot.send_message(chat_id=update.message.chat_id, text=text, parse_mode=ParseMode.MARKDOWN)
@@ -253,7 +264,7 @@ def reddit(bot, update, args):
     sorted_subs = sorted(subs, key=attrgetter('pct_week'), reverse=True)[:20]
     text = '*Reddit communities (top 20, by weekly growth) {}:*\n'.format(stringformat.emoji('charts'))
     for s in sorted_subs:
-        text += '    {}. *{}*: {} (W:{}, M:{})\n'.format(i, s.name, s.now, stringformat.percent(s.pct_week, emo=False), stringformat.percent(s.pct_month, emo=False))
+        text += '    {}. *{}*: {} (W: {}, M: {})\n'.format(i, s.name, s.now, stringformat.percent(s.pct_week, emo=False), stringformat.percent(s.pct_month, emo=False))
         i += 1
 
     bot.send_message(chat_id=update.message.chat_id, text=text, parse_mode=ParseMode.MARKDOWN)

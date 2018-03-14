@@ -123,6 +123,7 @@ def main():
     dp.add_handler(CommandHandler("twitter", commandscrypto.twitter, pass_args=True))
     dp.add_handler(CommandHandler("t", commandscrypto.twitter, pass_args=True))
     dp.add_handler(CommandHandler("coinmarketcap", commandscrypto.coinmarketcap, pass_args=True))
+    dp.add_handler(CommandHandler("cmc", commandscrypto.coinmarketcap, pass_args=True))
     dp.add_handler(CommandHandler("marketwatch", commandscrypto.set_marketwatch_timer,  pass_args=True, pass_job_queue=True, pass_chat_data=True))
     dp.add_handler(CommandHandler("mw", commandscrypto.set_marketwatch_timer, pass_args=True, pass_job_queue=True, pass_chat_data=True))
     dp.add_handler(CommandHandler("moonwatch", commandscrypto.set_moonwatch_timer, pass_args=True, pass_job_queue=True, pass_chat_data=True))

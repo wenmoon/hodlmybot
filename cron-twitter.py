@@ -7,6 +7,8 @@ from hodlcore import api
 from hodlcore import db
 
 def main():
+    print('Importing latest Twitter metrics...')
+
     with open('api-creds-twitter.json', 'r') as file:
         creds = model.OAuthCredentials(json.load(file))    
     database = db.TwitterDB()
@@ -16,6 +18,7 @@ def main():
         if twitter is not None:
             database.insert(twitter)
 
+    print('Done!')
 
 if __name__ == '__main__':
     main()
