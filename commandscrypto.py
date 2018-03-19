@@ -59,7 +59,7 @@ def search(bot, update, args):
 def usd(bot, update, args):
     try:
         token = api.search_token(args[0])
-        if not token:
+        if token is None:
             error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap.'.format(args[0])
             update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
         else:
@@ -89,7 +89,7 @@ def stats(bot, update, args):
         return
 
     token = api.search_token(args[0])
-    if not token:
+    if token is None:
         error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap.'.format(args[0])
         update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
         return
@@ -105,11 +105,11 @@ def compare(bot, update, args):
         token1 = api.search_token(args[0])
         token2 = api.search_token(args[1])
 
-        if not token1:
+        if token1 is None:
             error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap, or missing MCAP.'.format(args[0])
             update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
             return
-        if not token2:
+        if token2 is None:
             error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap, or missing MCAP.'.format(args[1])
             update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
             return
@@ -143,27 +143,33 @@ def mcap(bot, update):
 
 
 def ico(bot, update, args):
-    token_id = args[0]
-    ico_text = api.get_ico_text(token_id)
+    token = api.search_token(args[0])
+    if token is None:
+        error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap.'.format(args[0])
+        update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
+        return
+
+    ico_text = api.get_ico_text(token)
     if ico_text:
         bot.send_message(chat_id=update.message.chat_id, text=ico_text, parse_mode=ParseMode.MARKDOWN)
     else:
-        text = 'Sorry, I couldn\'t find *%s* on ICO Drops.'.format(token_id)
+        text = 'Sorry, I couldn\'t find *{}* on ICO Drops.'.format(token.id)
         update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
 
 
 def webpage(bot, update, args):
     query = args[0].lower()
     token = api.search_token(query)
-    if not token:
+    if token is None:
 	    bot.send_message(chat_id=update.message.chat_id, text='Could not find webpage for {}'.format(query), parse_mode=ParseMode.MARKDOWN)
-    bot.send_message(chat_id=update.message.chat_id, text=token.url, parse_mode=ParseMode.MARKDOWN)
+    else:
+        bot.send_message(chat_id=update.message.chat_id, text=token.url, parse_mode=ParseMode.MARKDOWN)
 
 
 def airdrops(bot, update):
-    airdrops_text = api.get_airdrops_text()
-    if airdrops_text:
-        bot.send_message(chat_id=update.message.chat_id, text=airdrops_text, parse_mode=ParseMode.MARKDOWN)
+    airdrops = api.get_airdrops()
+    if len(airdrops) > 0:
+        bot.send_message(chat_id=update.message.chat_id, text=stringformat.airdrops_summary(airdrops), parse_mode=ParseMode.MARKDOWN)
     else:
         bot.send_message(chat_id=update.message.chat_id, text="*No upcoming airdrops!*", parse_mode=ParseMode.MARKDOWN)
 
