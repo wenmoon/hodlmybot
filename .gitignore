@@ -1,4 +1,3 @@
 .DS_Store
 *.pyc
 api-creds-*
-data/*.db
