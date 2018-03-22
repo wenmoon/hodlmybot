@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from telegram.utils.helpers import escape_markdown
 from telegram import ParseMode
 

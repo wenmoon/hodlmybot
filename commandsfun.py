@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import random
 
 def fomo(bot, update):
