@@ -36,8 +36,21 @@ This bot currently supports the following commands:
     /diceroll - Throw 1d6
 ```
 
-## Requred dependencies
-python-telegram-bot, requirements, json, bs4, lxml
+## Installation
+This installation procedure assumes a Debian based system, but should work fine on other distros as well.
+It was developed and tested on Ubuntu 17.10.
+
+1. Create and copy the contens of the tarball to `/opt/hodlmybot`.
+1. Run the bootstrip script:
+    ```
+    $ ./bootstrap.sh
+    ```
+   Say yes to both installing cron jobs and service.
+1. Set your access token (see **Credentials**)
+1. Reboot or start the service manually:
+    ```
+    $ sudo systemctl start hodlmybot
+    $ sudo systemctl status hodlmybot
 
 ## Credentials
 In order to actually run your bot on Telegram, you will need to have an access token, and put it in `api-creds-telegram.json`:
@@ -68,3 +81,4 @@ Use `cron-twitter.py` to gather historical followers metrics from the tracked tw
 
 ### Reddit
 Use `cron-reddit.py` to gather historical subscribers metrics from the tracked Reddit subreddits. You must run this at least once. There is a default set of subreddits that will be tracked, and to update these based on the currently top ranked tokens, run `cron-reddit-update.py`.
+
