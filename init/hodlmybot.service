@@ -4,7 +4,7 @@ Description=Telegram bot with a wide variety of features related to crypto curre
 [Service] 
 Restart=on-failure
 WorkingDirectory=/opt/hodlmybot
-ExecStart=/bin/bash -c 'source /opt/hodlmybot/bin/activate && /opt/hodlmybot.py --log /var/log/hodlmybot.log'
+ExecStart=/bin/bash -c 'source /opt/hodlmybot/bin/activate && /opt/hodlmybot/hodlmybot.py --start --log /var/log/hodlmybot.log'
 ExecReload=/bin/kill -HUP $MAINPID 
 KillSignal=SIGINT 
 
