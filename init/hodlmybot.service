@@ -1,0 +1,13 @@
+[Unit] 
+Description=Telegram bot with a wide variety of features related to crypto currency.
+
+[Service] 
+Restart=on-failure
+WorkingDirectory=/opt/hodlmybot
+ExecStart=/opt/hodlmybot.py
+ExecReload=/bin/kill -HUP $MAINPID 
+KillSignal=SIGINT 
+
+[Install] 
+WantedBy=multi-user.target
+
