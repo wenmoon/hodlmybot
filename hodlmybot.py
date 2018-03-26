@@ -87,7 +87,8 @@ def help(bot, update):
 def main():
     # Create the Updater and pass it your bot's token.
     with open('api-creds-telegram.json', 'r') as file:
-        updater = Updater(json.load(file)['token'])
+        access_token = json.load(file)['access_token']
+        updater = Updater(access_token)
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher

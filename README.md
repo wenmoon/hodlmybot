@@ -1,4 +1,4 @@
-# hodlmybot
+# HODLMyBot
 Telegram bot with a wide variety of features related to crypto currency.
 
 ## Commands
@@ -36,18 +36,18 @@ This bot currently supports the following commands:
     /diceroll - Throw 1d6
 ```
 
-## Requred dependencies
-python-telegram-bot, requirements, json, bs4, lxml
+## Required dependencies
+To install required dependencies, run `pip install -r requirements.txt`.
 
 ## Credentials
 In order to actually run your bot on Telegram, you will need to have an access token, and put it in `api-creds-telegram.json`:
 ```
 {
-	"token": "YOUR_ACCESS_TOKEN"
+	"access_token": "YOUR_ACCESS_TOKEN"
 }
 ```
 
-To have access to the twitter functinality you need to create `api-creds-twitter.json`:
+To have access to the twitter functionality you need to create `api-creds-twitter.json`:
 ```
 {
 	"consumer_key": "YOUR_CONSUMER_KEY",
@@ -60,8 +60,8 @@ To have access to the twitter functinality you need to create `api-creds-twitter
 ## Updating historical data
 The bot works best if it can continuously poll the latest data from several sources, and import them into the database in the form of historical data. For this purpose there are a few scripts can be added to `cron`.
 
-### Coinmarketcap
-Use `cron-cmc.py` to import the lastest data from Coinmarketcap, which becomes the historical data used for token metrics. You must run this at least once.
+### CoinMarketCap
+Use `cron-cmc.py` to import the latest data from Coinmarketcap, which becomes the historical data used for token metrics. You must run this at least once.
 
 ### Twitter
 Use `cron-twitter.py` to gather historical followers metrics from the tracked twitter accounts. You must run this at least once. There is a default set of accounts that will be tracked, and to update these based on the currently top ranked tokens, run `cron-twitter-update.py`.

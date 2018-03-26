@@ -10,7 +10,7 @@ def main():
     print('Importing latest Twitter metrics...')
 
     with open('api-creds-twitter.json', 'r') as file:
-        creds = model.OAuthCredentials(json.load(file))    
+        creds = model.OAuthCredentials.from_json(json.load(file))
     database = db.TwitterDB()
     names = database.get_tracked()
     for name in names:
