@@ -376,79 +376,49 @@ def set_moonwatch_timer(bot, update, args, job_queue, chat_data):
 
 
 def moonwatch(bot, job):
-    logger.info('running moonwatch check')
-
+    eth = api.search_token('ethereum')
+    btc = api.search_token('bitcoin')
     top_tokens = api.get_top_tokens(limit=300)
-    tokens = []
-    volume_threshold = 500000
-    for token in top_tokens:
-        if token.volume_usd_24h >= volume_threshold:
-            tokens.append(coin)
-
+    tokens = [token for token in top_tokens if token.volume_24h >= 500000]
     for token in tokens:
-        # Change in price
-        if not token.percent_change_1h >= job._threshold:
-            continue
-        text = '*%s* (%s, #%s) *+%.2f%%* in the last hour, trading at *$%.2f*. BTC $%.2f, ETH $%.2f. %s' % (
+        text = '*{}* ({}, #{}) *+{:.2f}%* in the last hour, trading at *${:.2f}*. BTC ${:.2f}, ETH ${:.2f}. %{}'.format(
             token.name, token.symbol, token.rank, token.percent_change_1h,
-            token.price_usd, btc_usd, eth_usd, stringformat.emoji('rocket'))
+            token.price, btc.price, eth.price, stringformat.emoji('rocket'))
         bot.send_message(job.context, text=text, parse_mode=ParseMode.MARKDOWN)
 
         # Change in volume
-        db = TokenDB()
-        volumes = db.get_volumes(token)
+        token_db = db.TokenDB()
+        volumes = token_db.get_volumes(token.id)
         if not volumes:
             continue
-        pct_change = ((token.volume_usd_24h / volumes['last']) - 1) * 100
+        pct_change = ((token.volume_24h / volumes.now) - 1) * 100
         if pct_change >= 80 and \
-            token.volume_usd_24h > volumes['a_day_ago'] and \
-            token.volume_usd_24h > volumes['week_avg']: #job._threshold:
-            text = '*24h volume* of *%s* (%s, #%s) increased by *%.2f%%* to *$%d*. Last $%d, yesterday $%d, week avg $%d. %s' % (
-                token.name, token.symbol, token.rank, pct_change, token.volume_usd_24h,
-                volumes['last'], volumes['a_day_ago'], volumes['week_avg'], stringformat.emoji('fire'))
-            logger.info('%s is trading %.2f%% above last check' % (token.id, pct_change))
-            bot.send_message(job.context, text=text, parse_mode=ParseMode.MARKDOWN)
+            token.volume_24h > volumes.yesterday and \
+            token.volume_24h > volumes.avg_last_week:
+            text = '*24h volume* of *{}* ({}, #{}) increased by *{:.2f}%* to *${}*. Last ${}, yesterday ${}, week avg ${}. {}'.format(
+                token.name, token.symbol, token.rank, pct_change, token.volume_24h,
+                volumes.now, volumes.yesterday, volumes.avg_last_week, stringformat.emoji('fire'))
+            logger.info('{} is trading {:.2f}% above last check'.format(token.id, pct_change))
+        bot.send_message(job.context, text=text, parse_mode=ParseMode.MARKDOWN)
 
 
 def rankwatch(bot, job):
-    logger.info('running rankwatch check')
-    top_tokens = api.get_top_tokens(limit=200)
     volume_threshold = 500000
-
-    # Looking for changes in ranks
-    db = TokenDB()
-    climbers = []
+    top_tokens = api.get_top_tokens(limit=200)
+    token_db = db.TokenDB()
+    tokens_ranks = []
     for token in top_tokens:
-        ranks = db.get_ranks(token)
+        ranks = token_db.get_ranks(token.id)
         if not ranks:
             continue
-
-        if ranks['now'] < ranks['last'] and \
-           ranks['now'] < ranks['last_week'] and \
-           ranks['now'] < ranks['today'] and \
-           ranks['is_ath'] and \
-           coin.volume_usd_24h >= volume_threshold:
-            logger.info('ranks for %s: %s' % (token.id, ranks))
-            climber = {
-                'name': token.name,
-                'symbol': token.symbol,
-                'rank': ranks['now'],
-                'ranks_day': ranks['today'] - ranks['now'],
-                'ranks_week': ranks['last_week'] - ranks['now'],
-                'ranks_month': ranks['last_month'] - ranks['now'],
-                'volume': token.volume_usd_24h,
-            }
-            climbers.append(climber)
-        else:
-            continue
+        if token.volume_24h >= volume_threshold and ranks.now < ranks.last_week and ranks.now < ranks.today and ranks.is_atl:
+            tokens_ranks.append((token, ranks))
 
     if climbers:
-        sorted_climbers = sorted(climbers, key=itemgetter('ranks_day'), reverse=True)
+        tokens_ranks = sorted(tokens_ranks, key=itemgetter(1), reverse=False)
         text = '*CoinMarketCap rank climbers (w/m):*\n'
-        for climber in sorted_climbers:
-            #            - 6/12/24 ranks, #34 ZClassic (ZCL)
-            text += '    -%s*%s* (%s/%s): *%s* (%s, #%s)\n' % (
-                stringformat.emoji('triangle_up'), climber['ranks_day'], climber['ranks_week'], climber['ranks_month'],
-                climber['name'], climber['symbol'], climber['rank'])
-        text += '\nShowing All Time High ranks only.%s' % stringformat.emoji('fire')
+        for (token, ranks) in token_ranks:
+            text += stringformat.token_ranks_summary(token, ranks)
+        text += '\nShowing All Time High ranks only {}'.format(stringformat.emoji('fire'))
         bot.send_message(job.context, text=text, parse_mode=ParseMode.MARKDOWN)
+
