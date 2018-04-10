@@ -28,13 +28,13 @@ if [[ $REPLY =~ ^[Yy]$ ]]
 then
 	crontab -l > mycron
 	echo "# Every hour" >> mycron
-	echo "0 * * * * $WORKING_DIR/cron/cron-reddit.py >/dev/null 2>&1" >> mycron
-	echo "0 * * * * $WORKING_DIR/cron/cron-cmc.py >/dev/null 2>&1">> mycron
-	echo "0 * * * * $WORKING_DIR/cron/cron-twitter.py >/dev/null 2>&1" >>  mycron
+	echo "0 * * * * $WORKING_DIR/cron-reddit.py >/dev/null 2>&1" >> mycron
+	echo "0 * * * * $WORKING_DIR/cron-cmc.py >/dev/null 2>&1">> mycron
+	echo "0 * * * * $WORKING_DIR/cron-twitter.py >/dev/null 2>&1" >>  mycron
 	echo >> mycron
 	echo "# Every week" >> mycron
-	echo "0 0 * * 0 $WORKING_DIR/cron/cron-reddit-update.py >/dev/null 2>&1" >> mycron
-	echo "0 0 * * 0 $WORKING_DIR/cron/cron-twitter-update.py >/dev/null 2>&1" >> mycron
+	echo "0 0 * * 0 $WORKING_DIR/cron-reddit-update.py >/dev/null 2>&1" >> mycron
+	echo "0 0 * * 0 $WORKING_DIR/cron-twitter-update.py >/dev/null 2>&1" >> mycron
 	crontab mycron
 	rm mycron
 fi
