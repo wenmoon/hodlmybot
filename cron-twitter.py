@@ -1,7 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import json
-
 from hodlcore import model
 from hodlcore import api
 from hodlcore import db
