@@ -1,18 +1,21 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
 HODL MY BOT - A simple crypto tracking Telegram bot
 """
 
+import json
+import commandscrypto
+import commandsfun
+import argparse
+import sys
+import logging
+from logging.handlers import RotatingFileHandler
+from logging import handlers
 from telegram import InlineQueryResultArticle, ParseMode, InputTextMessageContent
 from telegram.ext import Updater, InlineQueryHandler, CommandHandler
 
-import json
-import logging
-
-import commandscrypto
-import commandsfun
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -85,6 +88,34 @@ def help(bot, update):
 
 
 def main():
+    # Fetch and parse commandline arguments
+    parser = argparse.ArgumentParser(
+        description="Telegram bot with a wide variety of features related to crypto currency",
+        epilog='Example: {} --start --debug'.format(sys.argv[0]))
+    parser.add_argument(
+        '--start', help="start hodlmybot", action='store_true', default=False)
+    parser.add_argument(
+        '--log', help="log to file (default: None)", metavar='FILE', default=None)
+    parser.add_argument(
+        '--debug', help="set loglevel to debug", action='store_true', default=False)
+
+    args = parser.parse_args()
+
+    # We need at least --start
+    if not args.start:
+        parser.print_help()
+        return False
+
+    # Set debug level
+    if args.debug:
+        logger.setLevel(logging.DEBUG)
+
+    # If we have log file, log to that file
+    if args.log:
+        log_file = handlers.RotatingFileHandler(args.log, maxBytes=(1048576*5), backupCount=7)
+        logger.addHandler(log_file)
+
+
     # Create the Updater and pass it your bot's token.
     with open('api-creds-telegram.json', 'r') as file:
         access_token = json.load(file)['access_token']

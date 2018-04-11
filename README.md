@@ -37,7 +37,23 @@ This bot currently supports the following commands:
 ```
 
 ## Required dependencies
-To install required dependencies, run `pip install -r requirements.txt`.
+To install required dependencies, run `pip install -r requirements.txt`. Running the bot in a venv is recommended (see Installation)
+
+## Installation
+This installation procedure assumes a Debian based system, but should work fine on other distros as well.
+It was developed and tested on Ubuntu 17.10.
+
+1. Create and copy the contens of the tarball to `/opt/hodlmybot`.
+1. Run the bootstrip script:
+    ```
+    $ ./bootstrap.sh
+    ```
+   Say yes to both installing cron jobs and service.
+1. Set your access token (see **Credentials**)
+1. Reboot or start the service manually:
+    ```
+    $ sudo systemctl start hodlmybot
+    $ sudo systemctl status hodlmybot
 
 ## Credentials
 In order to actually run your bot on Telegram, you will need to have an access token, and put it in `api-creds-telegram.json`:
