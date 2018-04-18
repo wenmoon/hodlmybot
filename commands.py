@@ -413,7 +413,12 @@ class FUDCommand(AbstractRandomImageCommand):
         return [
             'https://cdn-images-1.medium.com/max/827/1*ulMcUA-Kmbk5vBw3vIobVw.png',
             'https://www.smallcapasia.com/wp-content/uploads/2017/09/crypto-lingo.jpg',
-            'https://res.cloudinary.com/teepublic/image/private/s--tvWB4gBj--/t_Preview/b_rgb:ffffff,c_limit,f_jpg,h_630,q_90,w_630/v1516580235/production/designs/2297248_0.jpg'
+            'https://res.cloudinary.com/teepublic/image/private/s--tvWB4gBj--/t_Preview/b_rgb:ffffff,c_limit,f_jpg,h_630,q_90,w_630/v1516580235/production/designs/2297248_0.jpg',
+            'http://cdn.shopify.com/s/files/1/2696/8750/articles/FUD_1200x1200.jpg?v=1522260095',
+            'https://cdn-images-1.medium.com/max/1600/1*m4_jtyjXtpaHqUSWvSf0hQ.png',
+            'https://i.redd.it/qo5nintb93dz.gif',
+            'https://media1.tenor.com/images/28953eb0da0e6dcbaa270a491c2881d2/tenor.gif?itemid=4712571',
+            'https://i.kinja-img.com/gawker-media/image/upload/t_original/rnhmsghfmdzpprsfvcfu.gif'
         ]
 
     @property
@@ -429,7 +434,11 @@ class HODLCommand(AbstractRandomImageCommand):
             'https://i.redd.it/23hgyh92wtaz.jpg',
             'https://i.imgur.com/vWUqfc1.jpg',
             'http://i.imgur.com/Gr4I4sM.jpg',
-            'http://i0.kym-cdn.com/entries/emojis/original/000/024/987/hodlittt.jpg'
+            'http://i0.kym-cdn.com/entries/emojis/original/000/024/987/hodlittt.jpg',
+            'https://i.redd.it/h7ctfzwkplgz.jpg',
+            'https://res.cloudinary.com/teepublic/image/private/s--9n6OmwoI--/t_Preview/b_rgb:191919,c_limit,f_jpg,h_630,q_90,w_630/v1505698045/production/designs/1909343_1.jpg',
+            'https://i.redd.it/taldvguo6jfz.jpg',
+            'https://i.redd.it/fvh3ibzxz8kz.jpg'
         ]
 
     @property

@@ -50,20 +50,16 @@ class SlackBot(AbstractBot):
                 except Exception as e:
                     pass
 
-
     def post_message(self, message, channel):
         if message is not None and channel is not None:
             self._slack_client.api_call("chat.postMessage", channel=channel, text=message)
 
-
     def post_reply(self, message, channel):
         self.post_message(message, channel)
 
-
     def post_image(self, image, animated, channel):
-        attachements = [{"title": "", "image_url": image}]
+        attachments = [{"title": "", "image_url": image}]
         self._slack_client.api_call("chat.postMessage", channel=channel, text='', attachments=attachments)
-
 
 
 if __name__ == "__main__":
