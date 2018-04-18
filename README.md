@@ -1,12 +1,12 @@
 # HODLMyBot
-Telegram bot with a wide variety of features related to crypto currency.
+Bot with a wide variety of features related to crypto currency.
+
+## Supported platforms
+This bot currently works with Slack (`hodlmybot-slack.py`) and Telegram (`hodlmybot-telegram.py`).
 
 ## Commands
 ```
 This bot currently supports the following commands:
-    Help:
-    /help - This help
-
     Tools:
     /search - Search for coin
     /webpage <coin> - Link to coin webpage

@@ -16,8 +16,8 @@ from logging import handlers
 from telegram import InlineQueryResultArticle, ParseMode, InputTextMessageContent
 from telegram.ext import Updater, InlineQueryHandler, CommandHandler
 
-from commands import AbstractBot
 import commands
+from bot import AbstractBot
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -25,8 +25,44 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 
+class CommandAdapter(object):
+    def __init__(self, bot, command):
+        self.bot = bot
+        self.command = command
+
+    def invoke(self, bot, update, args):
+        self.command.invoke(self.bot, update.message.chat_id, args)
+
+
 class TelegramBot(AbstractBot):
-    def post_message(self, message, channel, attachments = None):
+    def __init__(self):
+        # Create the Updater and pass it your bot's token.
+        with open('api-creds-telegram.json', 'r') as file:
+            access_token = json.load(file)['access_token']
+            self.updater = Updater(access_token)
+
+        # Get the dispatcher to register handlers
+        self.dp = self.updater.dispatcher
+        self.bot = self.dp.bot
+
+        # Add commands
+        self._commands = commands.AllCommands(prefix='/')
+        for command in self._commands.all_commands:
+            adapter = CommandAdapter(self, command)
+            self.dp.add_handler(CommandHandler(command.name, adapter.invoke, pass_args=True))
+        self.dp.add_handler(CommandHandler('help', self.help))
+        # TODO: Handle watcher commands properly - challenge being writing an adaper for all the params
+        # dp.add_handler(CommandHandler("marketwatch", commandscrypto.set_marketwatch_timer,  pass_args=True, pass_job_queue=True, pass_chat_data=True))
+        # dp.add_handler(CommandHandler("mw", commandscrypto.set_marketwatch_timer, pass_args=True, pass_job_queue=True, pass_chat_data=True))
+        # dp.add_handler(CommandHandler("moonwatch", commandscrypto.set_moonwatch_timer, pass_args=True, pass_job_queue=True, pass_chat_data=True))
+
+        # on noncommand i.e message - echo the message on Telegram
+        self.dp.add_handler(InlineQueryHandler(inlinequery))
+
+        # log all errors
+        self.dp.add_error_handler(error)
+
+    def post_message(self, message, channel):
         self.bot.send_message(chat_id=channel, text=message, parse_mode=ParseMode.MARKDOWN)
 
     def post_reply(self, message, channel):
@@ -40,56 +76,8 @@ class TelegramBot(AbstractBot):
         else:
             self.bot.send_photo(chat_id=channel, photo=image)
 
-    def __init__(self):
-
-        # Create the Updater and pass it your bot's token.
-        with open('api-creds-telegram.json', 'r') as file:
-            access_token = json.load(file)['access_token']
-            self.updater = Updater(access_token)
-
-        # Get the dispatcher to register handlers
-        self.dp = self.updater.dispatcher
-        self.bot = self.dp.bot
-
-        # Start command
-        #dp.add_handler(CommandHandler("start", commandscrypto.start_default, pass_args=True, pass_job_queue=True, pass_chat_data=True))
-
-        self._commands = { 
-                'search': commands.TokenSearchCommand(self),
-                'stats': commands.TokenStatusCommand(self),
-                's': commands.TokenStatusCommand(self),
-                'usd': commands.TokenUSDCommand(self),
-                'convert': commands.TokenConvertCommand(self),
-                'compare': commands.TokenCompareCommand(self),
-                'mcap': commands.MarketCapitalizationCommand(self),
-                'm': commands.MarketCapitalizationCommand(self),
-                'ico': commands.ICOCommand(self),
-                'web': commands.TokenWebpageCommand(self),
-                'w': commands.TokenWebpageCommand(self),
-                'airdop': commands.AirdropsCommand(self),
-                'cmc': commands.CMCCommand(self),
-                'twitter': commands.TwitterCommand(self),
-                'reddit': commands.RedditCommand(self),
-                'hodl': commands.HODLCommand(self),
-                'fomo': commands.FOMOCommand(self),
-                'fud': commands.FUDCommand(self),
-                'carlos': commands.CarlosCommand(self),
-                'rackle': commands.RackleCommand(self),
-                'yn': commands.YesNoCommand(self),
-                'diceroll': commands.DicerollCommand(self)
-            }
-        for name, command in self._commands.iteritems():
-            self.dp.add_handler(CommandHandler(name, command.invoke_telegram, pass_args=True))
-        # TODO: Handle watcher commands properly - challenge being writing an adaper for all the params
-        # dp.add_handler(CommandHandler("marketwatch", commandscrypto.set_marketwatch_timer,  pass_args=True, pass_job_queue=True, pass_chat_data=True))
-        # dp.add_handler(CommandHandler("mw", commandscrypto.set_marketwatch_timer, pass_args=True, pass_job_queue=True, pass_chat_data=True))
-        # dp.add_handler(CommandHandler("moonwatch", commandscrypto.set_moonwatch_timer, pass_args=True, pass_job_queue=True, pass_chat_data=True))
-
-        # on noncommand i.e message - echo the message on Telegram
-        self.dp.add_handler(InlineQueryHandler(inlinequery))
-
-        # log all errors
-        self.dp.add_error_handler(error)
+    def help(self, bot, update):
+        self.post_message(self._commands.help(), update.message.chat_id)
 
     def start(self):
         # Start the Bot
@@ -130,41 +118,6 @@ def error(bot, update, error):
     """Log Errors caused by Updates."""
     logger.warning('Update "%s" caused error "%s"', update, error)
 
-
-def help(bot, update):
-    """Send a message when the command /help is issued."""
-    text = """This bot currently supports the following commands:
-    Help:
-    /help - This help
-
-    Tools:
-    /search - Search for coin
-    /webpage <coin> - Link to coin webpage
-    /mcap - Total market cap
-    /usd <coin> - USD value of <coin>
-    /stats [<coin>] - Global core metrics or metrics of <coin>
-    /ico <coin> - Get ICO info
-    /convert <amount> <from coin> <to coin> - Coin conversion
-    /compare <coin1> <coin2> - Compare two coins
-
-    Watchers:
-    /marketwatch [<threshold (%)> <interval (sec)>]|stop - Set threshold and interval for market watcher or stop
-    /moonwatch [<threshold (%)> <interval (sec)>]|stop - Set threshold and interval for mooning coins
-
-    Intel:
-    /airdrops - List of upcoming airdrops
-    /reddit [add|del <subreddit> or list] - Add or list Reddit followers
-    /twitter [add|del <user> or list] - Add or list Twitter followers
-
-    Fun:
-    /hodl - Helps you decide whether or not to HODL
-    /fomo - When you have FOMO
-    /fud - No FUD
-    /carlos - CARLOS MATOS!
-    /rackle - The Crazy Racklehahn
-    /shouldi - Helps you decide
-    /diceroll - Throw 1d6"""
-    update.message.reply_text(text)
 
 
 def main():

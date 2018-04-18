@@ -17,52 +17,93 @@ from hodlcore import db
 from hodlcore import stringformat
 
 
-class AbstractBot(object):
-    def post_message(self, message, channel):
-        pass
+class AllCommands(object):
+    def __init__(self, prefix):
+        self.all_commands = [
+            TokenSearchCommand(prefix, 'find'),
+            TokenSearchCommand(prefix, 'f'),
+            TokenSearchCommand(prefix, 'search'),
+            TokenStatsCommand(prefix, 'stats'),
+            TokenStatsCommand(prefix, 's'),
+            TokenUSDCommand(prefix, 'usd'),
+            TokenUSDCommand(prefix, 'u'),
+            TokenConvertCommand(prefix, 'convert'),
+            TokenConvertCommand(prefix, 'conv'),
+            TokenCompareCommand(prefix, 'compare'),
+            TokenCompareCommand(prefix, 'comp'),
+            MarketCapitalizationCommand(prefix, 'mcap'),
+            MarketCapitalizationCommand(prefix, 'm'),
+            TopMCAPCommand(prefix, 'topmcap'),
+            TopMCAPCommand(prefix, 'tm'),
+            ICOCommand(prefix, 'ico'),
+            TokenWebpageCommand(prefix, 'web'),
+            TokenWebpageCommand(prefix, 'w'),
+            AirdropsCommand(prefix, 'airdrop'),
+            TwitterCommand(prefix, 'twitter'),
+            TwitterCommand(prefix, 't'),
+            RedditCommand(prefix, 'reddit'),
+            RedditCommand(prefix, 'r'),
+            HODLCommand(prefix, 'hodl'),
+            FOMOCommand(prefix, 'fomo'),
+            FUDCommand(prefix, 'fud'),
+            CarlosCommand(prefix, 'carlos'),
+            RackleCommand(prefix, 'rackle'),
+            YesNoCommand(prefix, 'yn'),
+            DicerollCommand(prefix, 'diceroll'),
+            DicerollCommand(prefix, 'dice'),
+        ]
 
-    def post_reply(self, message, channel):
-        pass
+    def get_command(self, name):
+        for command in self.all_commands:
+            if command.name == name:
+                return command
+        return None
 
-    def post_image(self, image, animated, channel):
-        pass
-
-    # TODO
-    # def start_job(sefl, job, )
+    def help(self):
+        text = 'This bot currently supports the following commands:\n```'
+        for command in self.all_commands:
+            text += '{}\n'.format(command.usage)
+        text += '```'
+        return text
 
 
 class AbscractCommand(object):
-    def __init__(self, bot):
-        self.bot = bot
+    def __init__(self, prefix, name):
+        self.prefix = prefix
+        self.name = name
 
-    def invoke_telegram(self, bot, update, args):
-        self.invoke(update.message.chat_id, args)
-
-    def invoke(self, channel, args):
+    def invoke(self, bot, channel, args):
         pass
 
+    @property
+    def usage(self):
+        pass
 
-class TokenStatusCommand(AbscractCommand):
-    def invoke(self, channel, args):
+class TokenStatsCommand(AbscractCommand):
+    def invoke(self, bot, channel, args):
         if len(args) == 0:
             mcap = api.get_mcap()
-            self.bot.post_message(stringformat.mcap_summary(mcap), channel)
+            bot.post_message(stringformat.mcap_summary(mcap), channel)
             return
 
         token = api.search_token(args[0])
         if token is None:
-            error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap.'.format(args[0])
-            self.bot.post_reply(error, channel)
+            error = 'Sorry, I couldn\'t find *{}* on tokenMarketCap.'.format(args[0])
+            bot.post_reply(error, channel)
             return
 
         summary_btc = None
         if not token.is_bitcoin():
             summary_btc = db.TokenDB().get_prices_btc(token.id)
-        self.bot.post_message(stringformat.token_summary(token, summary_btc), channel)
+        bot.post_message(stringformat.token_summary(token, summary_btc), channel)
+
+    @property
+    def usage(self):
+        return '{}{} [<token>] - Global core metrics or metrics of <token>'.format(self.prefix, self.name)
 
 
 class TokenSearchCommand(AbscractCommand):
-    def invoke(self, channel, args):
+    def invoke(self, bot, channel, args):
         try:
             query = args[0].lower()
             tokens = api.search_tokens(search=query, limit=10000)
@@ -75,60 +116,76 @@ class TokenSearchCommand(AbscractCommand):
             else:
                 search_result = 'Sorry, *0 matches* for query: {}'.format()
 
-            self.bot.post_reply(search_result, channel)
+            bot.post_reply(search_result, channel)
         except (IndexError, ValueError):
-            self.bot.post_reply('Usage: /search <query>', channel)
+            bot.post_reply('Usage: {}'.format(self.usage), channel)
+
+    @property
+    def usage(self):
+        return '{}{} <query> - Search for a token'.format(self.prefix, self.name)
 
 
 class TokenUSDCommand(AbscractCommand):
-    def invoke(self, channel, args):
+    def invoke(self, bot, channel, args):
         try:
             token = api.search_token(args[0])
             if token is None:
-                error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap.'.format(args[0])
-                self.bot.post_message(error, channel)
+                error = 'Sorry, I couldn\'t find *{}* on tokenMarketCap.'.format(args[0])
+                bot.post_message(error, channel)
             else:
                 message = '{} 1 {} = *${:.2f}*'.format(stringformat.emoji('dollar'), token.symbol.upper(), token.price)
-                self.bot.post_message(message, channel)
+                bot.post_message(message, channel)
         except (IndexError, ValueError):
-                self.bot.post_reply('Usage: /usd <token>', channel)
+                bot.post_reply('Usage: {}'.format(self.usage), channel)
+
+    @property
+    def usage(self):
+        return '{}{} <token> - Convert 1 unit of token to USD'.format(self.prefix, self.name)
 
 
 class TokenConvertCommand(AbscractCommand):
-    def invoke(self, channel, args):
+    def invoke(self, bot, channel, args):
         try:
             amount = args[0]
             from_token = api.search_token(args[1])
             to_token = api.search_token(args[2])
             converted_amount = (float(amount) * from_token.price) / to_token.price
             message = '{} {} {} = *{:.8f} {}*'.format(stringformat.emoji('dollar'), amount, from_token.symbol.upper(), converted_amount, to_token.symbol.upper())
-            self.bot.post_reply(message, channel)
+            bot.post_reply(message, channel)
         except (IndexError, ValueError):
-            self.bot.post_reply('Usage: /convert <amount> <from token> <to token>', channel)
+            bot.post_reply('Usage: {}'.format(self.usage), channel)
+
+    @property
+    def usage(self):
+        return '{}{} <amount> <from token> <to token> - Convert between tokens'.format(self.prefix, self.name)
 
 
 class TokenCompareCommand(AbscractCommand):
-    def invoke(self, channel, args):
+    def invoke(self, bot, channel, args):
         try:
             token1 = api.search_token(args[0])
             token2 = api.search_token(args[1])
 
             if token1 is None:
-                error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap, or missing MCAP.'.format(args[0])
-                self.bot.post_reply(error, channel)
+                error = 'Sorry, I couldn\'t find *{}* on tokenMarketCap, or missing MCAP.'.format(args[0])
+                bot.post_reply(error, channel)
                 return
             if token2 is None:
-                error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap, or missing MCAP.'.format(args[1])
-                self.bot.post_reply(error, channel)
+                error = 'Sorry, I couldn\'t find *{}* on tokenMarketCap, or missing MCAP.'.format(args[1])
+                bot.post_reply(error, channel)
                 return
 
-            self.bot.post_message(stringformat.token_compared_summary(token1, token2), channel)
+            bot.post_message(stringformat.token_compared_summary(token1, token2), channel)
         except (IndexError, ValueError):
-            self.bot.post_reply('Usage: /compare <token1> <token2>', channel)
+            bot.post_reply('Usage: {}'.format(self.usage), channel)
+
+    @property
+    def usage(self):
+        return '{}{} <token1> <token2> - Do a comparative analysis of two tokens'.format(self.prefix, self.name)
 
 
 class MarketCapitalizationCommand(AbscractCommand):
-    def invoke(self, channel, args):
+    def invoke(self, bot, channel, args):
         mcap_now = api.get_mcap()
         mcap_db = db.MarketCapitalizationDB()
         mcap_prev = mcap_db.get_latest()
@@ -148,50 +205,65 @@ class MarketCapitalizationCommand(AbscractCommand):
         else:
             text = 'Total Market Cap unchanged, *${}*. {}'.format(stringformat.large_number(mcap_now.mcap), stringformat.emoji('carlos'))
 
-        self.bot.post_message(text, channell)
+        bot.post_message(text, channel)
+
+    @property
+    def usage(self):
+        return '{}{} - Show a breakdown of total mcap'.format(self.prefix, self.name)
 
 
 class ICOCommand(AbscractCommand):
-    def invoke(self, channel, args):
+    def invoke(self, bot, channel, args):
         token = api.search_token(args[0])
         if token is None:
-            error = 'Sorry, I couldn\'t find *{}* on CoinMarketCap.'.format(args[0])
-            self.bot.post_message(error, channel)
+            error = 'Sorry, I couldn\'t find *{}* on tokenMarketCap.'.format(args[0])
+            bot.post_message(error, channel)
             return
 
         ico_text = api.get_ico_text(token)
         if ico_text:
-            self.bot.post_message(ico_text, channel)
+            bot.post_message(ico_text, channel)
         else:
             text = 'Sorry, I couldn\'t find *{}* on ICO Drops.'.format(token.id)
-            self.bot.post_message(text, channel)
+            bot.post_message(text, channel)
+
+    @property
+    def usage(self):
+        return '{}{} <token> - Get ICO info'.format(self.prefix, self.name)
 
 
 class TokenWebpageCommand(AbscractCommand):
-    def invoke(self, channel, args):
+    def invoke(self, bot, channel, args):
         query = args[0].lower()
         token = api.search_token(query)
         if token is None:
-            self.bot.post_message('Could not find webpage for {}'.format(query), channel)
+            bot.post_message('Could not find webpage for {}'.format(query), channel)
         else:
-            self.bot.post_message(token.url, channel)
+            bot.post_message(token.url, channel)
 
+    @property
+    def usage(self):
+        return '{}{} <token> - Link to tokebn webpage'.format(self.prefix, self.name)
 
 class AirdropsCommand(AbscractCommand):
-    def invoke(self, channel, args):
+    def invoke(self, bot, channel, args):
         airdrops = api.get_airdrops()
         if len(airdrops) > 0:
-            self.bot.post_message(stringformat.airdrops_summary(airdrops), channel)
+            bot.post_message(stringformat.airdrops_summary(airdrops), channel)
         else:
-            self.bot.post_message("*No upcoming airdrops!*", channel)
+            bot.post_message("*No upcoming airdrops!*", channel)
+
+    @property
+    def usage(self):
+        return '{}{} - List of upcoming airdrops'.format(self.prefix, self.name)
 
 
-class CMCCommand(AbscractCommand):
-    def invoke(self, channel, args):
+class TopMCAPCommand(AbscractCommand):
+    def invoke(self, bot, channel, args):
         token_db = db.TokenDB()
         tokens = api.get_top_tokens(limit=200)
 
-        text = '*Coins (20 from top 300, by weekly mcap growth) {}:*\n'.format(stringformat.emoji('charts'))
+        text = '*tokens (20 from top 300, by weekly mcap growth) {}:*\n'.format(stringformat.emoji('charts'))
         mcaps = []
         for token in tokens:
             summary = token_db.get_mcaps(token.id)
@@ -204,11 +276,15 @@ class CMCCommand(AbscractCommand):
             text += '    {}. *{}*: {} (W:{}, M:{})\n'.format(i, m.name, m.now, stringformat.percent(m.pct_week, emo=False), stringformat.percent(m.pct_month, emo=False))
             i += 1
 
-        self.bot.post_message(text, channel)
+        bot.post_message(text, channel)
+
+    @property
+    def usage(self):
+        return '{}{} - List top 20 mcap tokens'.format(self.prefix, self.name)
 
 
 class TwitterCommand(AbscractCommand):
-    def invoke(self, channel, args):
+    def invoke(self, bot, channel, args):
         twitter_db = db.TwitterDB()
 
         # handle add/del/list functions
@@ -216,18 +292,18 @@ class TwitterCommand(AbscractCommand):
             if args[0].lower() == 'add':
                 twitter_db.track(args[1])
                 message = '*Added Twitter user {} to watch list.*'.format(args[1])
-                self.bot.post_reply(message, channel)
+                bot.post_reply(message, channel)
                 return
             elif args[0].lower() == 'del':
                 reddit_db.untrack(args[1])
                 message = '*Removed Twitter user {} to watch list.*'.format(args[1])
-                self.bot.post_reply(message, channel)
+                bot.post_reply(message, channel)
                 return
             elif args[0].lower() == 'list':
                 twitters = twitter_db.get_tracked()
                 message = '*Currently watching these Twitters accounts (%s total):*\n\n' % len(twitters)
                 message += ', '.join(twitters)
-                self.bot.post_message(message, channel)
+                bot.post_message(message, channel)
                 return
         except IndexError:
             pass
@@ -245,11 +321,15 @@ class TwitterCommand(AbscractCommand):
             text += '    {}. *{}*: {} (W: {}, M: {})\n'.format(i, s.name, s.now, stringformat.percent(s.pct_week, emo=False), stringformat.percent(s.pct_month, emo=False))
             i += 1
 
-        self.bot.post_message(text, channel)
+        bot.post_message(text, channel)
+
+    @property
+    def usage(self):
+        return '{}{} - [add|del <user> or list] - Add or list Twitter followers'.format(self.prefix, self.name)
 
 
 class RedditCommand(AbscractCommand):
-    def invoke(self, channel, args):
+    def invoke(self, bot, channel, args):
         reddit_db = db.RedditDB()
 
         # handle add/del/list functions
@@ -258,19 +338,19 @@ class RedditCommand(AbscractCommand):
                 subreddit = args[1]
                 reddit_db.track(subreddit)
                 message = '*Added subreddit {} to watch list.*'.format(subreddit)
-                self.bot.post_message(message, channel)
+                bot.post_message(message, channel)
                 return
             elif args[0].lower() == 'del':
                 subreddit = args[1]
                 reddit_db.untrack(subreddit)
                 message = '*Removed subreddit {} to watch list.*'.format(subreddit)
-                self.bot.post_message(message, channel)
+                bot.post_message(message, channel)
                 return
             elif args[0].lower() == 'list':
                 subreddits = reddit_db.get_tracked()
                 message = '*Currently watching these subreddits (%s total):*\n\n' % len(subreddits)
                 message += ', '.join(subreddits)
-                self.bot.post_message(message, channel)
+                bot.post_message(message, channel)
                 return
         except IndexError:
             pass
@@ -288,7 +368,11 @@ class RedditCommand(AbscractCommand):
             text += '    {}. *{}*: {} (W: {}, M: {})\n'.format(i, s.name, s.now, stringformat.percent(s.pct_week, emo=False), stringformat.percent(s.pct_month, emo=False))
             i += 1
 
-        self.bot.post_message(text, channel)
+        bot.post_message(text, channel)
+
+    @property
+    def usage(self):
+        return '{}{} - [add|del <user> or list] - Add or list Reddit subscribers'.format(self.prefix, self.name)
 
 
 class AbstractRandomImageCommand(AbscractCommand):
@@ -296,9 +380,9 @@ class AbstractRandomImageCommand(AbscractCommand):
     def images(self):
         return []
 
-    def invoke(self, channel, args):
+    def invoke(self, bot, channel, args):
         image = random.choice(self.images)
-        self.bot.post_image(image=image, animated=image.endswith('.gif'), channel=channel)
+        bot.post_image(image=image, animated=image.endswith('.gif'), channel=channel)
 
 
 class FOMOCommand(AbstractRandomImageCommand):
@@ -318,6 +402,10 @@ class FOMOCommand(AbstractRandomImageCommand):
             'https://i.amz.mshcdn.com/lUiSMH_1GICPM2TblSbwtCt09BI=/950x534/filters:quality(90)/2013%2F07%2F09%2F81%2FSocialNetwo.3f53a.jpg',
         ]
 
+    @property
+    def usage(self):
+        return '{}{} - When you have that FOMO'.format(self.prefix, self.name)
+
 
 class FUDCommand(AbstractRandomImageCommand):
     @property
@@ -327,6 +415,10 @@ class FUDCommand(AbstractRandomImageCommand):
             'https://www.smallcapasia.com/wp-content/uploads/2017/09/crypto-lingo.jpg',
             'https://res.cloudinary.com/teepublic/image/private/s--tvWB4gBj--/t_Preview/b_rgb:ffffff,c_limit,f_jpg,h_630,q_90,w_630/v1516580235/production/designs/2297248_0.jpg'
         ]
+
+    @property
+    def usage(self):
+        return '{}{} - When you suffer from FUD'.format(self.prefix, self.name)
 
 
 class HODLCommand(AbstractRandomImageCommand):
@@ -339,6 +431,10 @@ class HODLCommand(AbstractRandomImageCommand):
             'http://i.imgur.com/Gr4I4sM.jpg',
             'http://i0.kym-cdn.com/entries/emojis/original/000/024/987/hodlittt.jpg'
         ]
+
+    @property
+    def usage(self):
+        return '{}{} - When you need to hear that voice of reason'.format(self.prefix, self.name)
 
 
 class CarlosCommand(AbstractRandomImageCommand):
@@ -357,6 +453,10 @@ class CarlosCommand(AbstractRandomImageCommand):
             'https://thumbs.gfycat.com/MeaslySpecificHarrierhawk-size_restricted.gif'
         ]
 
+    @property
+    def usage(self):
+        return '{}{} - Bitconnneeeeeeeeeect!'.format(self.prefix, self.name)
+
 
 class RackleCommand(AbstractRandomImageCommand):
     @property
@@ -368,15 +468,27 @@ class RackleCommand(AbstractRandomImageCommand):
             'https://media.giphy.com/media/fs9B75LDKNXdkHASCB/giphy.gif',
         ]
 
+    @property
+    def usage(self):
+        return '{}{} - The Crazy Racklehahn'.format(self.prefix, self.name)
+
 
 class YesNoCommand(AbscractCommand):
-    def invoke(self, channel, args):
-        self.bot.post_reply(random.choice(['Yes.', 'No.']), channel)
+    def invoke(self, bot, channel, args):
+        bot.post_reply(random.choice(['Yes.', 'No.']), channel)
+
+    @property
+    def usage(self):
+        return '{}{} - For moments of unvertainty'.format(self.prefix, self.name)
 
 
 class DicerollCommand(AbscractCommand):
-    def invoke(self, channel, args):
-        self.bot.post_reply(random.choice(['1', '2', '3', '4', '5', '6']), channel)
+    def invoke(self, bot, channel, args):
+        bot.post_reply(random.choice(['1', '2', '3', '4', '5', '6']), channel)
+
+    @property
+    def usage(self):
+        return '{}{} - Throw 1d6'.format(self.prefix, self.name)
 
 
 # def marketwatch(bot, job):
@@ -401,14 +513,14 @@ class DicerollCommand(AbscractCommand):
 #         adj = stringformat.emoji('poop')
 #         prefix = ''
 
-#     return_url = 'https://coinmarketcap.com/charts/'
+#     return_url = 'https://tokenmarketcap.com/charts/'
 #     text = '*{}* Total Market Cap *{}{}%* in {} seconds, *${}!*\n\n{}'.format(t, prefix, change, job._interval, stringformat.large_number(mcap_now.mcap_usd), return_url)
 #     bot.send_message(job.context, text=text, parse_mode=ParseMode.MARKDOWN)
 
 
 # def moonwatch(bot, job):
 #     eth = api.search_token('ethereum')
-#     btc = api.search_token('bitcoin')
+#     btc = api.search_token('bittoken')
 #     top_tokens = api.get_top_tokens(limit=300)
 #     tokens = [token for token in top_tokens if token.volume_24h >= 500000]
 #     for token in tokens:
@@ -447,7 +559,7 @@ class DicerollCommand(AbscractCommand):
 
 #     if climbers:
 #         tokens_ranks = sorted(tokens_ranks, key=itemgetter(1), reverse=False)
-#         text = '*CoinMarketCap rank climbers (w/m):*\n'
+#         text = '*tokenMarketCap rank climbers (w/m):*\n'
 #         for (token, ranks) in token_ranks:
 #             text += stringformat.token_ranks_summary(token, ranks)
 #         text += '\nShowing All Time High ranks only {}'.format(stringformat.emoji('fire'))
