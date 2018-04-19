@@ -21,9 +21,9 @@ RTM_READ_DELAY = 1 # 1 second delay between reading from RTM
 
 
 class SlackBot(AbstractBot):
-    def __init__(self):        
-        file = open('api-creds-slack.json', 'r')
-        access_token = json.load(file)['access_token']
+    def __init__(self):
+        file = open('api-creds-bot.json', 'r')
+        access_token = json.load(file)['slack']['access_token']
         self._commands = commands.AllCommands(prefix='!')
         self._slack_client = SlackClient(access_token)
         if self._slack_client.rtm_connect(with_team_state=False):

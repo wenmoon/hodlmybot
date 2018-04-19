@@ -14,7 +14,8 @@ python3 -m venv .
 
 pip install -r requirements.txt
 
-cp api-creds-telegram.json.sample api-creds-telegram.json
+cp api-creds-bot.sample api-creds-bot.json
+cp api-creds-twitter.sample api-creds-twitter.json
 
 read -p "Do you want to run hodlmybot as a service [y/n]? " -n 1 -r
 if [[ $REPLY =~ ^[Yy]$ ]]
@@ -28,7 +29,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]
 then
 	crontab -l > mycron
 	echo "# Every hour" >> mycron
-	echo "0 * * * * $WORKING_DIR/cron-reddit.py >/dev/null 2>&1" >> mycron
+	echo "0 * * * * $WORKING_DIR/updater.py >/dev/null 2>&1" >> mycron
 	echo "0 * * * * $WORKING_DIR/cron-cmc.py >/dev/null 2>&1">> mycron
 	echo "0 * * * * $WORKING_DIR/cron-twitter.py >/dev/null 2>&1" >>  mycron
 	echo >> mycron
@@ -42,7 +43,7 @@ fi
 echo
 echo 'Bootstrap complete.'
 echo
-echo 'Remember to change the api-creds-telegram.json file, and see README.md for details on how to proceed!'
+echo 'Remember to change the api-creds-bot.json and api-creds-twitter.json files, and see README.md for details on how to proceed!'
 echo
 echo 'If you are running hodlmybot as a service you can start it with:'
 echo

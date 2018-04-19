@@ -43,8 +43,8 @@ class CommandAdapter(object):
 class TelegramBot(AbstractBot):
     def __init__(self):
         # Create the Updater and pass it your bot's token.
-        with open('api-creds-telegram.json', 'r') as file:
-            access_token = json.load(file)['access_token']
+        with open('api-creds-bot.json', 'r') as file:
+            access_token = json.load(file)['telegram']['access_token']
             self.updater = Updater(access_token)
 
         # Get the dispatcher to register handlers
