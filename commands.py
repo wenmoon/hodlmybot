@@ -25,6 +25,8 @@ class AllCommands(object):
             TokenSearchCommand(prefix, 'search'),
             TokenStatsCommand(prefix, 'stats'),
             TokenStatsCommand(prefix, 's'),
+            TokenLogoCommand(prefix, 'logo'),
+            TokenLogoCommand(prefix, 'l'),
             TokenUSDCommand(prefix, 'usd'),
             TokenUSDCommand(prefix, 'u'),
             TokenConvertCommand(prefix, 'convert'),
@@ -101,6 +103,18 @@ class TokenStatsCommand(AbscractCommand):
     def usage(self):
         return '{}{} [<token>] - Global core metrics or metrics of <token>'.format(self.prefix, self.name)
 
+class TokenLogoCommand(AbscractCommand):
+    def invoke(self, bot, channel, args):
+        query = args[0].lower()
+        token = api.search_token(query)
+        if token is None:
+            bot.post_message('Could not find logo for {}'.format(query), channel)
+        else:
+            bot.post_image(image=token.logo_url, animated=False, channel=channel)
+
+    @property
+    def usage(self):
+        return '{}{} <token> - Show token logo'.format(self.prefix, self.name)
 
 class TokenSearchCommand(AbscractCommand):
     def invoke(self, bot, channel, args):
@@ -230,7 +244,6 @@ class ICOCommand(AbscractCommand):
     @property
     def usage(self):
         return '{}{} <token> - Get ICO info'.format(self.prefix, self.name)
-
 
 class TokenWebpageCommand(AbscractCommand):
     def invoke(self, bot, channel, args):
@@ -526,33 +539,68 @@ class DicerollCommand(AbscractCommand):
 #     text = '*{}* Total Market Cap *{}{}%* in {} seconds, *${}!*\n\n{}'.format(t, prefix, change, job._interval, stringformat.large_number(mcap_now.mcap_usd), return_url)
 #     bot.send_message(job.context, text=text, parse_mode=ParseMode.MARKDOWN)
 
+# class MarketCapitalizationChangeCommand(AbscractCommand):
+#     def invoke(self, bot, channel, args):
+#         mcap_now = api.get_mcap()
+#         mcap_db = db.MarketCapitalizationDB()
+#         mcap_prev = mcap_db.get_latest()
+#         mcap_db.insert(mcap_now)
 
-# def moonwatch(bot, job):
-#     eth = api.search_token('ethereum')
-#     btc = api.search_token('bittoken')
-#     top_tokens = api.get_top_tokens(limit=300)
-#     tokens = [token for token in top_tokens if token.volume_24h >= 500000]
-#     for token in tokens:
-#         text = '*{}* ({}, #{}) *+{:.2f}%* in the last hour, trading at *${:.2f}*. BTC ${:.2f}, ETH ${:.2f}. %{}'.format(
-#             token.name, token.symbol, token.rank, token.percent_change_1h,
-#             token.price, btc.price, eth.price, stringformat.emoji('rocket'))
-#         bot.send_message(job.context, text=text, parse_mode=ParseMode.MARKDOWN)
+#         change = stringformat.percent(num=((mcap_now.mcap_usd - mcap_prev.mcap_usd) / mcap_now.mcap_usd) * 100, emo=False)
 
-#         # Change in volume
-#         token_db = db.TokenDB()
-#         volumes = token_db.get_volumes(token.id)
-#         if not volumes:
-#             continue
-#         pct_change = ((token.volume_24h / volumes.now) - 1) * 100
-#         if pct_change >= 80 and \
-#             token.volume_24h > volumes.yesterday and \
-#             token.volume_24h > volumes.avg_last_week:
-#             text = '*24h volume* of *{}* ({}, #{}) increased by *{:.2f}%* to *${}*. Last ${}, yesterday ${}, week avg ${}. {}'.format(
-#                 token.name, token.symbol, token.rank, pct_change, token.volume_24h,
-#                 volumes.now, volumes.yesterday, volumes.avg_last_week, stringformat.emoji('fire'))
-#             logger.info('{} is trading {:.2f}% above last check'.format(token.id, pct_change))
-#         bot.send_message(job.context, text=text, parse_mode=ParseMode.MARKDOWN)
+#         # Do nothing if change is not significant.
+#         # TODO configurable threshold
+#         if not abs(change) > job._threshold
+#             return
 
+#         if change > 0:
+#             t = 'Double rainbow!{}{}'.format(stringformat.emoji('rainbow'), stringformat.emoji('rainbow'))
+#             adj = stringformat.emoji('rocket')
+#             prefix = '+'
+#         elif change < 0:
+#             t = 'ACHTUNG!{}'.format(stringformat.emoji('collision'))
+#             adj = stringformat.emoji('poop')
+#             prefix = ''
+
+#         return_url = 'https://tokenmarketcap.com/charts/'
+#         text = '*{}* Total Market Cap *{}{}%* in {} seconds, *${}!*\n\n{}'.format(t, prefix, change, job._interval, stringformat.large_number(mcap_now.mcap_usd), return_url)
+#         bot.post_message(channel, text)
+
+#     @property
+#     def usage(self):
+#         return '{}{} - Shows large changes in the market'.format(self.prefix, self.name)
+
+
+# class MoonWatchCommand(AbstractCommand):
+#     def invoke(self, bot, channel, args):
+#         eth = api.search_token('ethereum')
+#         btc = api.search_token('bitcoin')
+#         top_tokens = api.get_top_tokens(limit=300)
+#         tokens = [token for token in top_tokens if token.volume_24h >= 500000]
+#         for token in tokens:
+#             text = '*{}* ({}, #{}) *+{:.2f}%* in the last hour, trading at *${:.2f}*. BTC ${:.2f}, ETH ${:.2f}. %{}'.format(
+#                 token.name, token.symbol, token.rank, token.percent_change_1h,
+#                 token.price, btc.price, eth.price, stringformat.emoji('rocket'))
+#             bot.post_message(channel, text)
+
+#             # Change in volume
+#             token_db = db.TokenDB()
+#             volumes = token_db.get_volumes(token.id)
+#             if not volumes:
+#                 continue
+#             pct_change = ((token.volume_24h / volumes.now) - 1) * 100
+#             if pct_change >= 80 and \
+#                 token.volume_24h > volumes.yesterday and \
+#                 token.volume_24h > volumes.avg_last_week:
+#                 text = '*24h volume* of *{}* ({}, #{}) increased by *{:.2f}%* to *${}*. Last ${}, yesterday ${}, week avg ${}. {}'.format(
+#                     token.name, token.symbol, token.rank, pct_change, token.volume_24h,
+#                     volumes.now, volumes.yesterday, volumes.avg_last_week, stringformat.emoji('fire'))
+#                 logger.info('{} is trading {:.2f}% above last check'.format(token.id, pct_change))
+#             bot.send_message(channel, text)
+
+#     @property
+#     def usage(self):
+#         return '{}{} - Shows what tokens are mooning'.format(self.prefix, self.name)
 
 # def rankwatch(bot, job):
 #     volume_threshold = 500000
