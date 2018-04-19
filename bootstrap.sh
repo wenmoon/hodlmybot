@@ -42,7 +42,7 @@ fi
 echo
 echo 'Bootstrap complete.'
 echo
-echo 'Remember to change the api-creds-telegram.json.sample file, and see README.md for details on how to proceed!'
+echo 'Remember to change the api-creds-telegram.json file, and see README.md for details on how to proceed!'
 echo
 echo 'If you are running hodlmybot as a service you can start it with:'
 echo

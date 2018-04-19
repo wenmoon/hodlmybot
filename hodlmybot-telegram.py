@@ -17,6 +17,7 @@ from telegram import InlineQueryResultArticle, ParseMode, InputTextMessageConten
 from telegram.ext import Updater, InlineQueryHandler, CommandHandler
 
 import commands
+from commands import AbstractCommand
 from bot import AbstractBot
 
 # Enable logging
@@ -30,8 +31,13 @@ class CommandAdapter(object):
         self.bot = bot
         self.command = command
 
-    def invoke(self, bot, update, args):
-        self.command.invoke(self.bot, update.message.chat_id, args)
+    def invoke(self, bot, update, args, job_queue=None, chat_data=None):
+        channel = update.message.chat_id
+        self.command.invoke(bot=self.bot, channel=channel, args=args)
+
+    def job_callback(self, bot, job):
+        channel = job.context
+        self.command.invoke(bot=self.bot, channel=channel, args=[job._interval, job._threshold])
 
 
 class TelegramBot(AbstractBot):
@@ -45,29 +51,34 @@ class TelegramBot(AbstractBot):
         self.dp = self.updater.dispatcher
         self.bot = self.dp.bot
 
-        # Add commands
+        # Add general commands
         self._commands = commands.AllCommands(prefix='/')
         for command in self._commands.all_commands:
             adapter = CommandAdapter(self, command)
             self.dp.add_handler(CommandHandler(command.name, adapter.invoke, pass_args=True))
-        self.dp.add_handler(CommandHandler('help', self.help))
-        # TODO: Handle watcher commands properly - challenge being writing an adaper for all the params
-        # dp.add_handler(CommandHandler("marketwatch", commandscrypto.set_marketwatch_timer,  pass_args=True, pass_job_queue=True, pass_chat_data=True))
-        # dp.add_handler(CommandHandler("mw", commandscrypto.set_marketwatch_timer, pass_args=True, pass_job_queue=True, pass_chat_data=True))
-        # dp.add_handler(CommandHandler("moonwatch", commandscrypto.set_moonwatch_timer, pass_args=True, pass_job_queue=True, pass_chat_data=True))
-
-        # on noncommand i.e message - echo the message on Telegram
-        self.dp.add_handler(InlineQueryHandler(inlinequery))
+        
+        # Add Telegram specific commands
+        self.dp.add_handler(CommandHandler("start", self._start_jobs, pass_args=True, pass_job_queue=True, pass_chat_data=True))
+        self.dp.add_handler(CommandHandler("stop", self._stop_jobs, pass_args=True, pass_job_queue=True))
+        self.dp.add_handler(CommandHandler('help', self._help))
 
         # log all errors
-        self.dp.add_error_handler(error)
+        self.dp.add_error_handler(self._error)
+
+    def start(self):
+        # Start the Bot
+        self.updater.start_polling()
+        print("HODL My Bot connected and running!")
+
+        # Block until the user presses Ctrl-C or the process receives SIGINT,
+        # SIGTERM or SIGABRT. This should be used most of the time, since
+        # start_polling() is non-blocking and will stop the bot gracefully.
+        self.updater.idle()
 
     def post_message(self, message, channel):
         self.bot.send_message(chat_id=channel, text=message, parse_mode=ParseMode.MARKDOWN)
 
     def post_reply(self, message, channel):
-        # TODO: Handle replies properly
-        #update.message.reply_text(error, parse_mode=ParseMode.MARKDOWN)
         self.post_message(message, channel)
 
     def post_image(self, image, animated, channel):
@@ -76,48 +87,40 @@ class TelegramBot(AbstractBot):
         else:
             self.bot.send_photo(chat_id=channel, photo=image)
 
-    def help(self, bot, update):
+    def _help(self, bot, update):
         self.post_message(self._commands.help(), update.message.chat_id)
 
-    def start(self):
-        # Start the Bot
-        self.updater.start_polling()
+    def _error(self, bot, update, error):
+        """Log Errors caused by Updates."""
+        logger.warning('Update "%s" caused error "%s"', update, error)
 
-        # Block until the user presses Ctrl-C or the process receives SIGINT,
-        # SIGTERM or SIGABRT. This should be used most of the time, since
-        # start_polling() is non-blocking and will stop the bot gracefully.
-        self.updater.idle()
-        print("HODL My Bot connected and running!")
+    def _start_jobs(self, bot, update, args, job_queue, chat_data):
+        chat_id = update.message.chat_id
+        # Moonwatch
+        moonw = self._commands.get_job_command('moonwatch')
+        job = job_queue.run_repeating(CommandAdapter(self, moonw).job_callback, 300, context=chat_id)
+        job._threshold = 0.7
+        job._interval = 300
+        chat_data['job'] = job
+        # Market watch
+        marketw = self._commands.get_job_command('marketwatch')
+        job = job_queue.run_repeating(CommandAdapter(self, marketw).job_callback, 900, context=chat_id)
+        job._threshold = 10
+        job._interval = 900
+        chat_data['job'] = job
+        # Start rank watch
+        marketw = self._commands.get_job_command('rankwatch')
+        job = job_queue.run_repeating(CommandAdapter(self, marketw).job_callback, 1, context=chat_id)
+        job._threshold = 500000
+        job._interval = 1
+        chat_data['job'] = job
+        # explicit start, in case explicit stop
+        job_queue.start()
 
-
-def inlinequery(bot, update):
-    query = update.inline_query.query
-    results = [
-        InlineQueryResultArticle(
-            id=uuid4(),
-            title="Caps",
-            input_message_content=InputTextMessageContent(
-                query.upper())),
-        InlineQueryResultArticle(
-            id=uuid4(),
-            title="Bold",
-            input_message_content=InputTextMessageContent(
-                "*{}*".format(escape_markdown(query)),
-                parse_mode=ParseMode.MARKDOWN)),
-        InlineQueryResultArticle(
-            id=uuid4(),
-            title="Italic",
-            input_message_content=InputTextMessageContent(
-                "_{}_".format(escape_markdown(query)),
-                parse_mode=ParseMode.MARKDOWN))]
-
-    update.inline_query.answer(results)
-
-
-def error(bot, update, error):
-    """Log Errors caused by Updates."""
-    logger.warning('Update "%s" caused error "%s"', update, error)
-
+    def _stop_jobs(self, bot, update, args, job_queue):
+        for job in job_queue.jobs():
+            job.enabled = False
+            job.schedule_removal()
 
 
 def main():

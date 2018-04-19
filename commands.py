@@ -17,6 +17,19 @@ from hodlcore import db
 from hodlcore import stringformat
 
 
+class AbstractCommand(object):
+    def __init__(self, prefix, name):
+        self.prefix = prefix
+        self.name = name
+
+    def invoke(self, bot, channel, args):
+        pass
+
+    @property
+    def usage(self):
+        pass
+
+
 class AllCommands(object):
     def __init__(self, prefix):
         self.all_commands = [
@@ -42,9 +55,8 @@ class AllCommands(object):
             TokenWebpageCommand(prefix, 'w'),
             AirdropsCommand(prefix, 'airdrop'),
             TwitterCommand(prefix, 'twitter'),
-            TwitterCommand(prefix, 't'),
             RedditCommand(prefix, 'reddit'),
-            RedditCommand(prefix, 'r'),
+            # Fun
             HODLCommand(prefix, 'hodl'),
             FOMOCommand(prefix, 'fomo'),
             FUDCommand(prefix, 'fud'),
@@ -54,9 +66,20 @@ class AllCommands(object):
             DicerollCommand(prefix, 'diceroll'),
             DicerollCommand(prefix, 'dice'),
         ]
+        self.job_commands = [
+            MarketWatchCommand(prefix, 'marketwatch'),
+            MoonWatchCommand(prefix, 'moonwatch'),
+            RankWatchCommand(prefix, 'rankwatch'),
+        ]
 
     def get_command(self, name):
         for command in self.all_commands:
+            if command.name == name:
+                return command
+        return None
+
+    def get_job_command(self, name):
+        for command in self.job_commands:
             if command.name == name:
                 return command
         return None
@@ -69,19 +92,7 @@ class AllCommands(object):
         return text
 
 
-class AbscractCommand(object):
-    def __init__(self, prefix, name):
-        self.prefix = prefix
-        self.name = name
-
-    def invoke(self, bot, channel, args):
-        pass
-
-    @property
-    def usage(self):
-        pass
-
-class TokenStatsCommand(AbscractCommand):
+class TokenStatsCommand(AbstractCommand):
     def invoke(self, bot, channel, args):
         if len(args) == 0:
             mcap = api.get_mcap()
@@ -103,7 +114,8 @@ class TokenStatsCommand(AbscractCommand):
     def usage(self):
         return '{}{} [<token>] - Global core metrics or metrics of <token>'.format(self.prefix, self.name)
 
-class TokenLogoCommand(AbscractCommand):
+
+class TokenLogoCommand(AbstractCommand):
     def invoke(self, bot, channel, args):
         query = args[0].lower()
         token = api.search_token(query)
@@ -116,7 +128,8 @@ class TokenLogoCommand(AbscractCommand):
     def usage(self):
         return '{}{} <token> - Show token logo'.format(self.prefix, self.name)
 
-class TokenSearchCommand(AbscractCommand):
+
+class TokenSearchCommand(AbstractCommand):
     def invoke(self, bot, channel, args):
         try:
             query = args[0].lower()
@@ -139,7 +152,7 @@ class TokenSearchCommand(AbscractCommand):
         return '{}{} <query> - Search for a token'.format(self.prefix, self.name)
 
 
-class TokenUSDCommand(AbscractCommand):
+class TokenUSDCommand(AbstractCommand):
     def invoke(self, bot, channel, args):
         try:
             token = api.search_token(args[0])
@@ -157,7 +170,7 @@ class TokenUSDCommand(AbscractCommand):
         return '{}{} <token> - Convert 1 unit of token to USD'.format(self.prefix, self.name)
 
 
-class TokenConvertCommand(AbscractCommand):
+class TokenConvertCommand(AbstractCommand):
     def invoke(self, bot, channel, args):
         try:
             amount = args[0]
@@ -174,7 +187,7 @@ class TokenConvertCommand(AbscractCommand):
         return '{}{} <amount> <from token> <to token> - Convert between tokens'.format(self.prefix, self.name)
 
 
-class TokenCompareCommand(AbscractCommand):
+class TokenCompareCommand(AbstractCommand):
     def invoke(self, bot, channel, args):
         try:
             token1 = api.search_token(args[0])
@@ -198,7 +211,7 @@ class TokenCompareCommand(AbscractCommand):
         return '{}{} <token1> <token2> - Do a comparative analysis of two tokens'.format(self.prefix, self.name)
 
 
-class MarketCapitalizationCommand(AbscractCommand):
+class MarketCapitalizationCommand(AbstractCommand):
     def invoke(self, bot, channel, args):
         mcap_now = api.get_mcap()
         mcap_db = db.MarketCapitalizationDB()
@@ -226,7 +239,7 @@ class MarketCapitalizationCommand(AbscractCommand):
         return '{}{} - Show a breakdown of total mcap'.format(self.prefix, self.name)
 
 
-class ICOCommand(AbscractCommand):
+class ICOCommand(AbstractCommand):
     def invoke(self, bot, channel, args):
         token = api.search_token(args[0])
         if token is None:
@@ -245,7 +258,8 @@ class ICOCommand(AbscractCommand):
     def usage(self):
         return '{}{} <token> - Get ICO info'.format(self.prefix, self.name)
 
-class TokenWebpageCommand(AbscractCommand):
+
+class TokenWebpageCommand(AbstractCommand):
     def invoke(self, bot, channel, args):
         query = args[0].lower()
         token = api.search_token(query)
@@ -256,9 +270,10 @@ class TokenWebpageCommand(AbscractCommand):
 
     @property
     def usage(self):
-        return '{}{} <token> - Link to tokebn webpage'.format(self.prefix, self.name)
+        return '{}{} <token> - Link to token webpage'.format(self.prefix, self.name)
 
-class AirdropsCommand(AbscractCommand):
+
+class AirdropsCommand(AbstractCommand):
     def invoke(self, bot, channel, args):
         airdrops = api.get_airdrops()
         if len(airdrops) > 0:
@@ -271,7 +286,7 @@ class AirdropsCommand(AbscractCommand):
         return '{}{} - List of upcoming airdrops'.format(self.prefix, self.name)
 
 
-class TopMCAPCommand(AbscractCommand):
+class TopMCAPCommand(AbstractCommand):
     def invoke(self, bot, channel, args):
         token_db = db.TokenDB()
         tokens = api.get_top_tokens(limit=200)
@@ -296,7 +311,7 @@ class TopMCAPCommand(AbscractCommand):
         return '{}{} - List top 20 mcap tokens'.format(self.prefix, self.name)
 
 
-class TwitterCommand(AbscractCommand):
+class TwitterCommand(AbstractCommand):
     def invoke(self, bot, channel, args):
         twitter_db = db.TwitterDB()
 
@@ -341,7 +356,7 @@ class TwitterCommand(AbscractCommand):
         return '{}{} - [add|del <user> or list] - Add or list Twitter followers'.format(self.prefix, self.name)
 
 
-class RedditCommand(AbscractCommand):
+class RedditCommand(AbstractCommand):
     def invoke(self, bot, channel, args):
         reddit_db = db.RedditDB()
 
@@ -388,7 +403,100 @@ class RedditCommand(AbscractCommand):
         return '{}{} - [add|del <user> or list] - Add or list Reddit subscribers'.format(self.prefix, self.name)
 
 
-class AbstractRandomImageCommand(AbscractCommand):
+class MarketWatchCommand(AbstractCommand):
+    def invoke(self, bot, channel, args):
+        mcap_now = api.get_mcap()
+        mcap_db = db.MarketCapitalizationDB()
+        mcap_prev = mcap_db.get_latest()
+        mcap_db.insert(mcap_now)
+
+        change = stringformat.percent(num=((mcap_now.mcap_usd - mcap_prev.mcap_usd) / mcap_now.mcap_usd) * 100, emo=False)
+
+        threshold = 0.7
+        try:
+            threshold = args[1]
+        except Exception:
+            pass
+        if abs(change) < 0.7:
+            return
+
+        if change > 0:
+            t = 'Double rainbow!{}{}'.format(stringformat.emoji('rainbow'), stringformat.emoji('rainbow'))
+            adj = stringformat.emoji('rocket')
+            prefix = '+'
+        elif change < 0:
+            t = 'ACHTUNG!{}'.format(stringformat.emoji('collision'))
+            adj = stringformat.emoji('poop')
+            prefix = ''
+
+        return_url = 'https://tokenmarketcap.com/charts/'
+        text = '*{}* Total Market Cap *{}{}%* in {} seconds, *${}!*\n\n{}'.format(t, prefix, change, interval, stringformat.large_number(mcap_now.mcap_usd), return_url)
+        bot.post_message(text, channel)
+
+    @property
+    def usage(self):
+        return '{}{} - Shows large changes in the market'.format(self.prefix, self.name)
+
+
+class MoonWatchCommand(AbstractCommand):
+    def invoke(self, bot, channel, args):
+        eth = api.search_token('ethereum')
+        btc = api.search_token('bitcoin')
+        top_tokens = api.get_top_tokens(limit=300)
+        tokens = [token for token in top_tokens if token.volume_24h >= 500000]
+        for token in tokens:
+            text = '*{}* ({}, #{}) *+{:.2f}%* in the last hour, trading at *${:.2f}*. BTC ${:.2f}, ETH ${:.2f}. %{}'.format(
+                token.name, token.symbol, token.rank, token.percent_change_1h,
+                token.price, btc.price, eth.price, stringformat.emoji('rocket'))
+            bot.post_message(text, channel)
+
+            # Change in volume
+            token_db = db.TokenDB()
+            volumes = token_db.get_volumes(token.id)
+            if not volumes:
+                continue
+            pct_change = ((token.volume_24h / volumes.now) - 1) * 100
+            if pct_change >= 80 and \
+                token.volume_24h > volumes.yesterday and \
+                token.volume_24h > volumes.avg_last_week:
+                text = '*24h volume* of *{}* ({}, #{}) increased by *{:.2f}%* to *${}*. Last ${}, yesterday ${}, week avg ${}. {}'.format(
+                    token.name, token.symbol, token.rank, pct_change, token.volume_24h,
+                    volumes.now, volumes.yesterday, volumes.avg_last_week, stringformat.emoji('fire'))
+                logger.info('{} is trading {:.2f}% above last check'.format(token.id, pct_change))
+            bot.post_message(text, channel)
+
+    @property
+    def usage(self):
+        return '{}{} - Shows what tokens are mooning'.format(self.prefix, self.name)
+
+
+class RankWatchCommand(AbstractCommand):
+    def invoke(self, bot, channel, args):
+        volume_threshold = 500000
+        top_tokens = api.get_top_tokens(limit=200)
+        token_db = db.TokenDB()
+        tokens_ranks = []
+        for token in top_tokens:
+            ranks = token_db.get_ranks(token.id)
+            if not ranks:
+                continue
+            if token.volume_24h >= volume_threshold and ranks.now < ranks.last_week and ranks.now < ranks.today and ranks.is_atl:
+                tokens_ranks.append((token, ranks))
+
+        if len(tokens_ranks) > 0:
+            tokens_ranks = sorted(tokens_ranks, key=itemgetter(1), reverse=False)
+            text = '*tokenMarketCap rank climbers (w/m):*\n'
+            for (token, ranks) in token_ranks:
+                text += stringformat.token_ranks_summary(token, ranks)
+            text += '\nShowing All Time High ranks only {}'.format(stringformat.emoji('fire'))
+            bot.post_message(text, channel)
+
+    @property
+    def usage(self):
+        return '{}{} - Shows what tokens are climbing the ranks'.format(self.prefix, self.name)
+
+
+class AbstractRandomImageCommand(AbstractCommand):
     @property
     def images(self):
         return []
@@ -495,7 +603,7 @@ class RackleCommand(AbstractRandomImageCommand):
         return '{}{} - The Crazy Racklehahn'.format(self.prefix, self.name)
 
 
-class YesNoCommand(AbscractCommand):
+class YesNoCommand(AbstractCommand):
     def invoke(self, bot, channel, args):
         bot.post_reply(random.choice(['Yes.', 'No.']), channel)
 
@@ -504,121 +612,11 @@ class YesNoCommand(AbscractCommand):
         return '{}{} - For moments of unvertainty'.format(self.prefix, self.name)
 
 
-class DicerollCommand(AbscractCommand):
+class DicerollCommand(AbstractCommand):
     def invoke(self, bot, channel, args):
         bot.post_reply(random.choice(['1', '2', '3', '4', '5', '6']), channel)
 
     @property
     def usage(self):
         return '{}{} - Throw 1d6'.format(self.prefix, self.name)
-
-
-# def marketwatch(bot, job):
-#     mcap_now = api.get_mcap()
-#     mcap_db = db.MarketCapitalizationDB()
-#     mcap_prev = mcap_db.get_latest()
-#     mcap_db.insert(mcap_now)
-
-#     change = stringformat.percent(num=((mcap_now.mcap_usd - mcap_prev.mcap_usd) / mcap_now.mcap_usd) * 100, emo=False)
-#     logger.info('old mcap: {:.2f}, new mcap: {:.2f}, threshold: {:.1f}, change: {:.8f}'.format(mcap_prev.mcap, mcap_now.mcap, job._threshold, change))
-
-#     # Do nothing if change is not significant.
-#     if not abs(change) > job._threshold:
-#         return
-
-#     if change > 0:
-#         t = 'Double rainbow!{}{}'.format(stringformat.emoji('rainbow'), stringformat.emoji('rainbow'))
-#         adj = stringformat.emoji('rocket')
-#         prefix = '+'
-#     elif change < 0:
-#         t = 'ACHTUNG!{}'.format(stringformat.emoji('collision'))
-#         adj = stringformat.emoji('poop')
-#         prefix = ''
-
-#     return_url = 'https://tokenmarketcap.com/charts/'
-#     text = '*{}* Total Market Cap *{}{}%* in {} seconds, *${}!*\n\n{}'.format(t, prefix, change, job._interval, stringformat.large_number(mcap_now.mcap_usd), return_url)
-#     bot.send_message(job.context, text=text, parse_mode=ParseMode.MARKDOWN)
-
-# class MarketCapitalizationChangeCommand(AbscractCommand):
-#     def invoke(self, bot, channel, args):
-#         mcap_now = api.get_mcap()
-#         mcap_db = db.MarketCapitalizationDB()
-#         mcap_prev = mcap_db.get_latest()
-#         mcap_db.insert(mcap_now)
-
-#         change = stringformat.percent(num=((mcap_now.mcap_usd - mcap_prev.mcap_usd) / mcap_now.mcap_usd) * 100, emo=False)
-
-#         # Do nothing if change is not significant.
-#         # TODO configurable threshold
-#         if not abs(change) > job._threshold
-#             return
-
-#         if change > 0:
-#             t = 'Double rainbow!{}{}'.format(stringformat.emoji('rainbow'), stringformat.emoji('rainbow'))
-#             adj = stringformat.emoji('rocket')
-#             prefix = '+'
-#         elif change < 0:
-#             t = 'ACHTUNG!{}'.format(stringformat.emoji('collision'))
-#             adj = stringformat.emoji('poop')
-#             prefix = ''
-
-#         return_url = 'https://tokenmarketcap.com/charts/'
-#         text = '*{}* Total Market Cap *{}{}%* in {} seconds, *${}!*\n\n{}'.format(t, prefix, change, job._interval, stringformat.large_number(mcap_now.mcap_usd), return_url)
-#         bot.post_message(channel, text)
-
-#     @property
-#     def usage(self):
-#         return '{}{} - Shows large changes in the market'.format(self.prefix, self.name)
-
-
-# class MoonWatchCommand(AbstractCommand):
-#     def invoke(self, bot, channel, args):
-#         eth = api.search_token('ethereum')
-#         btc = api.search_token('bitcoin')
-#         top_tokens = api.get_top_tokens(limit=300)
-#         tokens = [token for token in top_tokens if token.volume_24h >= 500000]
-#         for token in tokens:
-#             text = '*{}* ({}, #{}) *+{:.2f}%* in the last hour, trading at *${:.2f}*. BTC ${:.2f}, ETH ${:.2f}. %{}'.format(
-#                 token.name, token.symbol, token.rank, token.percent_change_1h,
-#                 token.price, btc.price, eth.price, stringformat.emoji('rocket'))
-#             bot.post_message(channel, text)
-
-#             # Change in volume
-#             token_db = db.TokenDB()
-#             volumes = token_db.get_volumes(token.id)
-#             if not volumes:
-#                 continue
-#             pct_change = ((token.volume_24h / volumes.now) - 1) * 100
-#             if pct_change >= 80 and \
-#                 token.volume_24h > volumes.yesterday and \
-#                 token.volume_24h > volumes.avg_last_week:
-#                 text = '*24h volume* of *{}* ({}, #{}) increased by *{:.2f}%* to *${}*. Last ${}, yesterday ${}, week avg ${}. {}'.format(
-#                     token.name, token.symbol, token.rank, pct_change, token.volume_24h,
-#                     volumes.now, volumes.yesterday, volumes.avg_last_week, stringformat.emoji('fire'))
-#                 logger.info('{} is trading {:.2f}% above last check'.format(token.id, pct_change))
-#             bot.send_message(channel, text)
-
-#     @property
-#     def usage(self):
-#         return '{}{} - Shows what tokens are mooning'.format(self.prefix, self.name)
-
-# def rankwatch(bot, job):
-#     volume_threshold = 500000
-#     top_tokens = api.get_top_tokens(limit=200)
-#     token_db = db.TokenDB()
-#     tokens_ranks = []
-#     for token in top_tokens:
-#         ranks = token_db.get_ranks(token.id)
-#         if not ranks:
-#             continue
-#         if token.volume_24h >= volume_threshold and ranks.now < ranks.last_week and ranks.now < ranks.today and ranks.is_atl:
-#             tokens_ranks.append((token, ranks))
-
-#     if climbers:
-#         tokens_ranks = sorted(tokens_ranks, key=itemgetter(1), reverse=False)
-#         text = '*tokenMarketCap rank climbers (w/m):*\n'
-#         for (token, ranks) in token_ranks:
-#             text += stringformat.token_ranks_summary(token, ranks)
-#         text += '\nShowing All Time High ranks only {}'.format(stringformat.emoji('fire'))
-#         bot.send_message(job.context, text=text, parse_mode=ParseMode.MARKDOWN)
 
