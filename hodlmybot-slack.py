@@ -62,7 +62,7 @@ class SlackBot(AbstractBot):
         self._slack_client.api_call("chat.postMessage", channel=channel, text='', attachments=attachments)
 
 
-if __name__ == "__main__":
+def main(): 
     # Fetch and parse commandline arguments
     parser = argparse.ArgumentParser(
         description="Slack bot with a wide variety of features related to crypto currency",
@@ -93,3 +93,6 @@ if __name__ == "__main__":
         bot.parse_commands()
         time.sleep(RTM_READ_DELAY)
 
+
+if __name__ == "__main__":
+    main()
