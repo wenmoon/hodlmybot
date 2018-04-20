@@ -14,8 +14,10 @@ python3 -m venv .
 
 pip install -r requirements.txt
 
-cp api-creds-bot.sample api-creds-bot.json
-cp api-creds-twitter.sample api-creds-twitter.json
+if [ ! -f api-creds-bot.json ]; then
+	cp api-creds-bot.sample api-creds-bot.json
+if [ ! -f api-creds-twitter.json ]; then
+	cp api-creds-twitter.sample api-creds-twitter.json
 
 read -p "Do you want to run hodlmybot-telegram as a service [y/n]? " -n 1 -r
 if [[ $REPLY =~ ^[Yy]$ ]]
@@ -37,7 +39,6 @@ then
 	crontab -l > mycron
 	echo "# Every hour" >> mycron
 	echo "0 * * * * $WORKING_DIR/hodlcore/updater.py >/dev/null 2>&1" >> mycron
-	echo >> mycron
 	# echo "# Every week" >> mycron
 	# echo "0 0 * * 0 $WORKING_DIR/hodlcore/updater.py >/dev/null 2>&1" >> mycron
 	crontab mycron
@@ -54,6 +55,6 @@ echo
 echo '    $ sudo service hodlmybot-telegram start'
 echo '    $ sudo service hodlmybot-slack start'
 echo
-echo 'GLHF!'
+echo 'HODL!'
 echo
 
