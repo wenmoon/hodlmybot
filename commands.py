@@ -6,7 +6,7 @@ import re
 import json
 import random
 
-from slackclient import SlackClient
+import logging
 
 from operator import itemgetter
 from operator import attrgetter
@@ -16,6 +16,11 @@ from hodlcore import model
 from hodlcore import db
 from hodlcore import stringformat
 
+# Enable logging
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
+
+logger = logging.getLogger(__name__)
 
 class AbstractCommand(object):
     def __init__(self, prefix, name):
@@ -304,7 +309,7 @@ class TopMCAPCommand(AbstractCommand):
         token_db = db.TokenDB()
         tokens = api.get_top_tokens(limit=200)
 
-        text = '*tokens (20 from top 300, by weekly mcap growth) {}:*\n'.format(stringformat.emoji('charts'))
+        text = '*Tokens (20 from top 300, by weekly mcap growth) {}:*\n'.format(stringformat.emoji('charts'))
         mcaps = []
         for token in tokens:
             summary = token_db.get_mcaps(token.id)
@@ -314,7 +319,7 @@ class TopMCAPCommand(AbstractCommand):
         i = 1
         sorted_mcaps = sorted(mcaps, key=attrgetter('pct_week'), reverse=True)[:20]
         for m in sorted_mcaps:
-            text += '    {}. *{}*: {} (W:{}, M:{})\n'.format(i, m.name, m.now, stringformat.percent(m.pct_week, emo=False), stringformat.percent(m.pct_month, emo=False))
+            text += '\t{}. *{}*: {} (W:{}, M:{})\n'.format(i, m.name, m.now, stringformat.percent(m.pct_week, emo=False), stringformat.percent(m.pct_month, emo=False))
             i += 1
 
         bot.post_message(text, channel)

@@ -129,8 +129,6 @@ def main():
         description="Telegram bot with a wide variety of features related to crypto currency",
         epilog='Example: {} --start --debug'.format(sys.argv[0]))
     parser.add_argument(
-        '--start', help="start hodlmybot", action='store_true', default=False)
-    parser.add_argument(
         '--log', help="log to file (default: None)", metavar='FILE', default=None)
     parser.add_argument(
         '--debug', help="set loglevel to debug", action='store_true', default=False)
@@ -151,9 +149,8 @@ def main():
         log_file = handlers.RotatingFileHandler(args.log, maxBytes=(1048576*5), backupCount=7)
         logger.addHandler(log_file)
 
-    if args.start:
-        bot = TelegramBot()
-        bot.start()
+    bot = TelegramBot()
+    bot.start()
 
 if __name__ == '__main__':
     main()

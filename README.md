@@ -57,19 +57,26 @@ It was developed and tested on Ubuntu 17.10.
 1. Set your access token (see **Credentials**)
 1. Reboot or start the service manually:
     ```
-    $ sudo systemctl start hodlmybot
-    $ sudo systemctl status hodlmybot
+    $ sudo systemctl start hodlmybot-slack
+    $ sudo systemctl start hodlmybot-telegram
+    $ sudo systemctl status hodlmybot-slack
+    $ sudo systemctl status hodlmybot-telegram
     ```
 
 ## Credentials
-In order to actually run your bot on Telegram, you will need to have an access token, and put it in `api-creds-telegram.json`:
+In order to actually run your bot on Telegram and Slack, you will need to have set up your bots and have their access tokens, and put them in `api-creds-bot.json`:
 ```
 {
-	"access_token": "YOUR_ACCESS_TOKEN"
+    "slack" : {
+        "access_token": "YOUR_SLACK_ACCESS_TOKEN"
+    },
+    "telegram" : {
+        "access_token": "YOUR_TELEGRAM_ACCESS_TOKEN"
+    }
 }
 ```
 
-To have access to the twitter functionality you need to create `api-creds-twitter.json`:
+To have access to the Twitter functionality, you need access to their API and enter the details in `api-creds-twitter.json`:
 ```
 {
 	"consumer_key": "YOUR_CONSUMER_KEY",

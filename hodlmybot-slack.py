@@ -63,7 +63,33 @@ class SlackBot(AbstractBot):
 
 
 if __name__ == "__main__":
+    # Fetch and parse commandline arguments
+    parser = argparse.ArgumentParser(
+        description="Slack bot with a wide variety of features related to crypto currency",
+        epilog='Example: {} --debug'.format(sys.argv[0]))
+    parser.add_argument(
+        '--log', help="log to file (default: None)", metavar='FILE', default=None)
+    parser.add_argument(
+        '--debug', help="set loglevel to debug", action='store_true', default=False)
+
+    args = parser.parse_args()
+
+    # We need at least --start
+    if not args.start:
+        parser.print_help()
+        return False
+
+    # Set debug level
+    if args.debug:
+        logger.setLevel(logging.DEBUG)
+
+    # If we have log file, log to that file
+    if args.log:
+        log_file = handlers.RotatingFileHandler(args.log, maxBytes=(1048576*5), backupCount=7)
+        logger.addHandler(log_file)
+
     bot = SlackBot()
     while True:
         bot.parse_commands()
         time.sleep(RTM_READ_DELAY)
+
