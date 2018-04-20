@@ -33,6 +33,7 @@ class AbstractCommand(object):
 class AllCommands(object):
     def __init__(self, prefix):
         self.all_commands = [
+            AboutCommand(prefix, 'about'),
             TokenSearchCommand(prefix, 'find'),
             TokenSearchCommand(prefix, 'f'),
             TokenSearchCommand(prefix, 'search'),
@@ -87,9 +88,21 @@ class AllCommands(object):
     def help(self):
         text = 'This bot currently supports the following commands:\n```'
         for command in self.all_commands:
-            text += '{}\n'.format(command.usage)
+            text += '\t{}\n'.format(command.usage)
         text += '```'
         return text
+
+
+class AboutCommand(AbstractCommand):
+    def invoke(self, bot, channel, args):
+        message =  '{} HODL My Bot - The Simple Crypto Bot\n'.format(stringformat.emoji('robot'))
+        message += '{} github.com/wenmoon/hodlmybot\n'.format(stringformat.emoji('link'))
+        message += '{} ETH: 0x73eFDa13bC0d0717b4f2f36418279FD4E2Cd0Af9\n'.format(stringformat.emoji('money_bag'))
+        bot.post_message(message, channel)
+
+    @property
+    def usage(self):
+        return '{}{} - A little bit about myself'.format(self.prefix, self.name)
 
 
 class TokenStatsCommand(AbstractCommand):
@@ -112,7 +125,7 @@ class TokenStatsCommand(AbstractCommand):
 
     @property
     def usage(self):
-        return '{}{} [<token>] - Global core metrics or metrics of <token>'.format(self.prefix, self.name)
+        return '{}{} [<token>] - Global metrics, or metrics of <token>'.format(self.prefix, self.name)
 
 
 class TokenLogoCommand(AbstractCommand):
@@ -167,7 +180,7 @@ class TokenUSDCommand(AbstractCommand):
 
     @property
     def usage(self):
-        return '{}{} <token> - Convert 1 unit of token to USD'.format(self.prefix, self.name)
+        return '{}{} <token> - Convert <token> to USD'.format(self.prefix, self.name)
 
 
 class TokenConvertCommand(AbstractCommand):
@@ -184,7 +197,7 @@ class TokenConvertCommand(AbstractCommand):
 
     @property
     def usage(self):
-        return '{}{} <amount> <from token> <to token> - Convert between tokens'.format(self.prefix, self.name)
+        return '{}{} <amount> <from> <to> - Convert between tokens'.format(self.prefix, self.name)
 
 
 class TokenCompareCommand(AbstractCommand):
@@ -208,7 +221,7 @@ class TokenCompareCommand(AbstractCommand):
 
     @property
     def usage(self):
-        return '{}{} <token1> <token2> - Do a comparative analysis of two tokens'.format(self.prefix, self.name)
+        return '{}{} <token1> <token2> - Compare two tokens'.format(self.prefix, self.name)
 
 
 class MarketCapitalizationCommand(AbstractCommand):
@@ -353,7 +366,7 @@ class TwitterCommand(AbstractCommand):
 
     @property
     def usage(self):
-        return '{}{} - [add|del <user> or list] - Add or list Twitter followers'.format(self.prefix, self.name)
+        return '{}{} - [add|del <user>] - Add or list followers'.format(self.prefix, self.name)
 
 
 class RedditCommand(AbstractCommand):
@@ -400,7 +413,7 @@ class RedditCommand(AbstractCommand):
 
     @property
     def usage(self):
-        return '{}{} - [add|del <user> or list] - Add or list Reddit subscribers'.format(self.prefix, self.name)
+        return '{}{} - [add|del <subreddit>] - Add or list subscribers'.format(self.prefix, self.name)
 
 
 class MarketWatchCommand(AbstractCommand):

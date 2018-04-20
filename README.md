@@ -7,33 +7,38 @@ This bot currently works with Slack (`hodlmybot-slack.py`) and Telegram (`hodlmy
 ## Commands
 ```
 This bot currently supports the following commands:
-    Tools:
-    /search - Search for coin
-    /webpage <coin> - Link to coin webpage
-    /mcap - Total market cap
-    /usd <coin> - USD value of <coin>
-    /stats [<coin>] - Global core metrics or metrics of <coin>
-    /ico <coin> - Get ICO info
-    /convert <amount> <from coin> <to coin> - Coin conversion
-    /compare <coin1> <coin2> - Compare two coins
-
-    Watchers:
-    /marketwatch [<threshold (%)> <interval (sec)>]|stop - Set threshold and interval for market watcher or stop
-    /moonwatch [<threshold (%)> <interval (sec)>]|stop - Set threshold and interval for mooning coins
-
-    Intel:
-    /airdrops - List of upcoming airdrops
-    /reddit [add|del <subreddit> or list] - Add or list Reddit followers
-    /twitter [add|del <user> or list] - Add or list Twitter followers
-
-    Fun:
-    /hodl - Helps you decide whether or not to HODL
-    /fomo - When you have FOMO
-    /fud - No FUD
-    /carlos - CARLOS MATOS!
+    /about - A little bit about myself
+    /find <query> - Search for a token
+    /f <query> - Search for a token
+    /search <query> - Search for a token
+    /stats [<token>] - Global metrics, or metrics of <token>
+    /s [<token>] - Global metrics, or metrics of <token>
+    /logo <token> - Show token logo
+    /l <token> - Show token logo
+    /usd <token> - Convert <token> to USD
+    /u <token> - Convert <token> to USD
+    /convert <amount> <from> <to> - Convert between tokens
+    /conv <amount> <from> <to> - Convert between tokens
+    /compare <token1> <token2> - Compare two tokens
+    /comp <token1> <token2> - Compare two tokens
+    /mcap - Show a breakdown of total mcap
+    /m - Show a breakdown of total mcap
+    /topmcap - List top 20 mcap tokens
+    /tm - List top 20 mcap tokens
+    /ico <token> - Get ICO info
+    /web <token> - Link to token webpage
+    /w <token> - Link to token webpage
+    /airdrop - List of upcoming airdrops
+    /twitter - [add|del <user>] - Add or list followers
+    /reddit - [add|del <subreddit>] - Add or list subscribers
+    /hodl - When you need to hear that voice of reason
+    /fomo - When you have that FOMO
+    /fud - When you suffer from FUD
+    /carlos - Bitconnneeeeeeeeeect!
     /rackle - The Crazy Racklehahn
-    /shouldi - Helps you decide
+    /yn - For moments of unvertainty
     /diceroll - Throw 1d6
+    /dice - Throw 1d6
 ```
 
 ## Required dependencies
@@ -54,6 +59,7 @@ It was developed and tested on Ubuntu 17.10.
     ```
     $ sudo systemctl start hodlmybot
     $ sudo systemctl status hodlmybot
+    ```
 
 ## Credentials
 In order to actually run your bot on Telegram, you will need to have an access token, and put it in `api-creds-telegram.json`:
