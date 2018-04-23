@@ -5,7 +5,7 @@
 	"telegram" : {
 		"access_token": ""
 	},
-	"dischord" : {
+	"discord" : {
 		"access_token": ""
 	}
 }

@@ -2,7 +2,7 @@
 Bot with a wide variety of features related to crypto currency.
 
 ## Supported platforms
-This bot currently works with Slack (`hodlmybot-slack.py`), Telegram (`hodlmybot-telegram.py`) and Dischord (`hodlmybot-dischord.py`).
+This bot currently works with Slack (`hodlmybot-slack.py`), Telegram (`hodlmybot-telegram.py`) and Discord (`hodlmybot-discord.py`).
 
 ## Commands
 ```
@@ -75,7 +75,7 @@ In order to actually run your bot on Telegram and Slack, you will need to have s
     "telegram" : {
         "access_token": "YOUR_TELEGRAM_ACCESS_TOKEN"
     },
-    "dischord" : {
+    "discord" : {
         "access_token": ""
     }
 }
