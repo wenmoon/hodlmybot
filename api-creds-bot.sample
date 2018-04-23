@@ -4,5 +4,8 @@
 	},
 	"telegram" : {
 		"access_token": ""
+	},
+	"dischord" : {
+		"access_token": ""
 	}
 }

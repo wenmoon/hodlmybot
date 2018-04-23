@@ -2,7 +2,7 @@
 Bot with a wide variety of features related to crypto currency.
 
 ## Supported platforms
-This bot currently works with Slack (`hodlmybot-slack.py`) and Telegram (`hodlmybot-telegram.py`).
+This bot currently works with Slack (`hodlmybot-slack.py`), Telegram (`hodlmybot-telegram.py`) and Dischord (`hodlmybot-dischord.py`).
 
 ## Commands
 ```
@@ -61,6 +61,8 @@ It was developed and tested on Ubuntu 17.10.
     $ sudo systemctl start hodlmybot-telegram
     $ sudo systemctl status hodlmybot-slack
     $ sudo systemctl status hodlmybot-telegram
+    $ sudo systemctl status hodlmybot-dischord
+    $ sudo systemctl status hodlmybot-dischord
     ```
 
 ## Credentials
@@ -72,6 +74,9 @@ In order to actually run your bot on Telegram and Slack, you will need to have s
     },
     "telegram" : {
         "access_token": "YOUR_TELEGRAM_ACCESS_TOKEN"
+    },
+    "dischord" : {
+        "access_token": ""
     }
 }
 ```
@@ -87,13 +92,13 @@ To have access to the Twitter functionality, you need access to their API and en
 ```
 
 ## Updating historical data
-The bot works best if it can continuously poll the latest data from several sources, and import them into the database in the form of historical data. For this purpose there are a few scripts can be added to `cron`.
+The bot works best if it can continuously poll the latest data from several sources, and import them into the database in the form of historical data. For this purpose you have the `updater.py` script in `hodlcore` to be used with `cron`.
 
 ### CoinMarketCap
-Use `cron-cmc.py` to import the latest data from Coinmarketcap, which becomes the historical data used for token metrics. You must run this at least once.
+Imports the latest data from Coinmarketcap, which becomes the historical data used for token metrics.
 
 ### Twitter
-Use `cron-twitter.py` to gather historical followers metrics from the tracked twitter accounts. You must run this at least once. There is a default set of accounts that will be tracked, and to update these based on the currently top ranked tokens, run `cron-twitter-update.py`.
+Gathers historical followers metrics from the tracked twitter accounts.
 
 ### Reddit
-Use `cron-reddit.py` to gather historical subscribers metrics from the tracked Reddit subreddits. You must run this at least once. There is a default set of subreddits that will be tracked, and to update these based on the currently top ranked tokens, run `cron-reddit-update.py`.
+Gather historical subscribers metrics from the tracked Reddit subreddits. 

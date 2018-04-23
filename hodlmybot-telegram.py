@@ -6,8 +6,6 @@ HODL MY BOT - A simple crypto tracking Telegram bot
 """
 
 import json
-import commandscrypto
-import commandsfun
 import argparse
 import sys
 import logging
@@ -134,11 +132,6 @@ def main():
         '--debug', help="set loglevel to debug", action='store_true', default=False)
 
     args = parser.parse_args()
-
-    # We need at least --start
-    if not args.start:
-        parser.print_help()
-        return False
 
     # Set debug level
     if args.debug:
