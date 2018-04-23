@@ -6,18 +6,26 @@ HODL MY BOT - A simple crypto tracking Slack bot
 """
 
 import os
+import argparse
+import sys
 import time
 import re
 import json
+import logging
 from slackclient import SlackClient
+
 from hodlcore import api
 from hodlcore import model
-
 from bot import AbstractBot
 import commands
 
 # constants
 RTM_READ_DELAY = 1 # 1 second delay between reading from RTM
+
+# Enable logging
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class SlackBot(AbstractBot):
@@ -73,11 +81,6 @@ def main():
         '--debug', help="set loglevel to debug", action='store_true', default=False)
 
     args = parser.parse_args()
-
-    # We need at least --start
-    if not args.start:
-        parser.print_help()
-        return False
 
     # Set debug level
     if args.debug:
