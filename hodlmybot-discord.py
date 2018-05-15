@@ -23,17 +23,19 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
+
 class DischordBot(AbstractBot):
     def __init__(self):
         self._commands = commands.AllCommands(prefix='!')
         self._client = discord.Client()
+        self._queue = []
 
         @self._client.event
         async def on_message(message):
             # we do not want the bot to reply to itself
             if message.author == self._client.user:
                 return
-
             try:
                 channel = message.channel
                 message = message.content.split()
@@ -41,13 +43,10 @@ class DischordBot(AbstractBot):
                 if not command_str.startswith(self._commands.prefix):
                     return
                 raw_command = command_str[1:]
-                if raw_command == 'help':
-                    self.post_help(channel)
-                    return
                 command = self._commands.get_command(raw_command)
                 if command is not None:
                     args = message[1:]
-                    command.invoke(self, channel, args)
+                    await command.invoke(self, channel, args)
             except Exception as e:
                 print(e)
                 pass
@@ -65,20 +64,18 @@ class DischordBot(AbstractBot):
         access_token = json.load(file)['discord']['access_token']
         self._client.run(access_token)
 
-    def post_message(self, message, channel):
-        print('post_message')
-        print(message)
+    async def post_message(self, message, channel):
         if message is not None and channel is not None:
-           self._client.send_message(channel, message)
+           await self._client.send_message(channel, message)
 
-    def post_reply(self, message, channel):
-        self.post_message(message, channel)
+    async def post_reply(self, message, channel):
+        await self.post_message(message, channel)
 
-    def post_image(self, image, animated, channel):
-        self.post_message(image, channel)
+    async def post_image(self, image, animated, channel):
+        await self.post_message(image, channel)
 
-    def post_help(self, channel):
-        self.post_message(self._commands.help(), channel)
+    async def post_help(self, channel):
+        await self.post_message(self._commands.help(), channel)
 
 
 def main(): 

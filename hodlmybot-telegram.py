@@ -15,8 +15,9 @@ from telegram import InlineQueryResultArticle, ParseMode, InputTextMessageConten
 from telegram.ext import Updater, InlineQueryHandler, CommandHandler
 
 import commands
-from commands import AbstractCommand
 from bot import AbstractBot
+
+import asyncio
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -31,7 +32,10 @@ class CommandAdapter(object):
 
     def invoke(self, bot, update, args, job_queue=None, chat_data=None):
         channel = update.message.chat_id
-        self.command.invoke(bot=self.bot, channel=channel, args=args)
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(self.command.invoke(bot=self.bot, channel=channel, args=args))
+        loop.close()
 
     def job_callback(self, bot, job):
         channel = job.context
@@ -73,13 +77,13 @@ class TelegramBot(AbstractBot):
         # start_polling() is non-blocking and will stop the bot gracefully.
         self.updater.idle()
 
-    def post_message(self, message, channel):
+    async def post_message(self, message, channel):
         self.bot.send_message(chat_id=channel, text=message, parse_mode=ParseMode.MARKDOWN)
 
-    def post_reply(self, message, channel):
-        self.post_message(message, channel)
+    async def post_reply(self, message, channel):
+        await self.post_message(message, channel)
 
-    def post_image(self, image, animated, channel):
+    async def post_image(self, image, animated, channel):
         if animated:
             self.bot.sendDocument(chat_id=channel, document=image)
         else:

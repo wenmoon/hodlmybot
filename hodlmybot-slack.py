@@ -9,7 +9,12 @@ import os
 import time
 import re
 import json
+import argparse
+import sys
+import asyncio
+
 from slackclient import SlackClient
+
 from hodlcore import api
 from hodlcore import model
 
@@ -18,6 +23,17 @@ import commands
 
 # constants
 RTM_READ_DELAY = 1 # 1 second delay between reading from RTM
+
+class CommandAdapter(object):
+    def __init__(self, bot, command):
+        self.bot = bot
+        self.command = command
+
+    def invoke(self, channel, args):
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(self.command.invoke(bot=self.bot, channel=channel, args=args))
+        loop.close()
 
 
 class SlackBot(AbstractBot):
@@ -40,24 +56,22 @@ class SlackBot(AbstractBot):
                     message = event["text"].split()
                     command_str = message[0]
                     raw_command = command_str[1:]
-                    if raw_command == 'help':
-                        self.post_message(self._commands.help(), channel)
-                        return
                     command = self._commands.get_command(raw_command)
                     if command is not None:
                         args = message[1:]
-                        command.invoke(self, channel, args)
+                        CommandAdapter(self, command).invoke(channel, args)
                 except Exception as e:
+                    print(e)
                     pass
 
-    def post_message(self, message, channel):
+    async def post_message(self, message, channel):
         if message is not None and channel is not None:
             self._slack_client.api_call("chat.postMessage", channel=channel, text=message)
 
-    def post_reply(self, message, channel):
-        self.post_message(message, channel)
+    async def post_reply(self, message, channel):
+        await self.post_message(message, channel)
 
-    def post_image(self, image, animated, channel):
+    async def post_image(self, image, animated, channel):
         attachments = [{"title": "", "image_url": image}]
         self._slack_client.api_call("chat.postMessage", channel=channel, text='', attachments=attachments)
 
@@ -73,11 +87,6 @@ def main():
         '--debug', help="set loglevel to debug", action='store_true', default=False)
 
     args = parser.parse_args()
-
-    # We need at least --start
-    if not args.start:
-        parser.print_help()
-        return False
 
     # Set debug level
     if args.debug:

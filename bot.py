@@ -1,14 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 class AbstractBot(object):
-    def post_message(self, message, channel):
+    async def post_message(self, message, channel):
         pass
 
-    def post_reply(self, message, channel):
+    async def post_reply(self, message, channel):
         pass
 
-    def post_image(self, image, animated, channel):
+    async def post_image(self, image, animated, channel):
         pass
-
-    # TODO
-    # def start_job(sefl, job, )
