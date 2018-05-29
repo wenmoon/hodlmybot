@@ -33,6 +33,13 @@ then
 	sudo systemctl enable hodlmybot-slack
 fi
 
+read -p "Do you want to run hodlmybot-discord as a service [y/n]? " -n 1 -r
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+	sudo cp $WORKING_DIR/init/hodlmybot-discord.service /lib/systemd/system
+	sudo systemctl enable hodlmybot-discord
+fi
+
 read -p "Install cron jobs [y/n]? " -n 1 -r
 if [[ $REPLY =~ ^[Yy]$ ]]
 then

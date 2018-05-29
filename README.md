@@ -1,10 +1,10 @@
-# HODLMyBot
-Bot with a wide variety of features related to crypto currency.
+# HODL My Bot 🍺
+ChatBot with a wide variety of features related to crypto currency.
 
-## Supported platforms
+## Supported platforms 🖥
 This bot currently works with Slack (`hodlmybot-slack.py`), Telegram (`hodlmybot-telegram.py`) and Discord (`hodlmybot-discord.py`).
 
-## Commands
+## Commands 🤖
 ```
 This bot currently supports the following commands:
     /about - A little bit about myself
@@ -41,10 +41,10 @@ This bot currently supports the following commands:
     /dice - Throw 1d6
 ```
 
-## Required dependencies
+## Required dependencies ⚙️
 To install required dependencies, run `pip install -r requirements.txt`. Running the bot in a venv is recommended (see Installation)
 
-## Installation
+## Installation 📲
 This installation procedure assumes a Debian based system, but should work fine on other distros as well.
 It was developed and tested on Ubuntu 17.10.
 
@@ -65,7 +65,7 @@ It was developed and tested on Ubuntu 17.10.
     $ sudo systemctl status hodlmybot-dischord
     ```
 
-## Credentials
+## Credentials 👀
 In order to actually run your bot on Telegram and Slack, you will need to have set up your bots and have their access tokens, and put them in `api-creds-bot.json`:
 ```
 {
@@ -91,7 +91,7 @@ To have access to the Twitter functionality, you need access to their API and en
 }
 ```
 
-## Updating historical data
+## Updating historical data 📊
 The bot works best if it can continuously poll the latest data from several sources, and import them into the database in the form of historical data. For this purpose you have the `updater.py` script in `hodlcore` to be used with `cron`.
 
 ### CoinMarketCap
