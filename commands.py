@@ -282,19 +282,12 @@ class MarketCapitalizationCommand(AbstractCommand):
         if mcap_prev is None:
             text = 'Total Market Cap, *${}*'.format(stringformat.large_number(mcap_now.mcap_usd))
         else:
-            change = stringformat.percent(num=((mcap_now.mcap_usd - mcap_prev.mcap_usd) / mcap_now.mcap_usd) * 100, emo=False)
-            adj = ''
-            if change > 0:
-                adj = stringformat.emoji('rocket')
-                prefix = '+'
-            elif change < 0:
-                adj = stringformat.emoji('skull')
-                prefix = ''
-
-            if adj:
-                text = 'Total Market Cap *{}{}* since last check, *${}*. {}'.format(prefix, change, stringformat.large_number(mcap_now.mcap_usd), adj)
-            else:
+            change = ((mcap_now.mcap_usd - mcap_prev.mcap_usd) / mcap_now.mcap_usd) * 100
+            if change == 0:
                 text = 'Total Market Cap unchanged, *${}*. {}'.format(stringformat.large_number(mcap_now.mcap_usd), stringformat.emoji('carlos'))
+            else:
+                emoji = stringformat.emoji('rocket') if change > 0 else stringformat.emoji('skull')
+                text = 'Total Market Cap *{}* since last check, *${}*. {}'.format(stringformat.percent(num=change, emo=False), stringformat.large_number(mcap_now.mcap_usd), emoji)
 
         await bot.post_message(text, channel)
 
