@@ -279,19 +279,22 @@ class MarketCapitalizationCommand(AbstractCommand):
         mcap_prev = mcap_db.get_latest()
         mcap_db.insert(mcap_now)
 
-        change = stringformat.percent(num=((mcap_now.mcap_usd - mcap_prev.mcap_usd) / mcap_now.mcap_usd) * 100, emo=False)
-        adj = ''
-        if change > 0:
-            adj = stringformat.emoji('rocket')
-            prefix = '+'
-        elif change < 0:
-            adj = stringformat.emoji('skull')
-            prefix = ''
-
-        if adj:
-            text = 'Total Market Cap *{}{}* since last check, *${}*. {}'.format(prefix, change, stringformat.large_number(mcap_now.mcap_usd), adj)
+        if mcap_prev is None:
+            text = 'Total Market Cap, *${}*'.format(stringformat.large_number(mcap_now.mcap_usd))
         else:
-            text = 'Total Market Cap unchanged, *${}*. {}'.format(stringformat.large_number(mcap_now.mcap), stringformat.emoji('carlos'))
+            change = stringformat.percent(num=((mcap_now.mcap_usd - mcap_prev.mcap_usd) / mcap_now.mcap_usd) * 100, emo=False)
+            adj = ''
+            if change > 0:
+                adj = stringformat.emoji('rocket')
+                prefix = '+'
+            elif change < 0:
+                adj = stringformat.emoji('skull')
+                prefix = ''
+
+            if adj:
+                text = 'Total Market Cap *{}{}* since last check, *${}*. {}'.format(prefix, change, stringformat.large_number(mcap_now.mcap_usd), adj)
+            else:
+                text = 'Total Market Cap unchanged, *${}*. {}'.format(stringformat.large_number(mcap_now.mcap_usd), stringformat.emoji('carlos'))
 
         await bot.post_message(text, channel)
 
