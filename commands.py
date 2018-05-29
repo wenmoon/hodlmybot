@@ -399,12 +399,15 @@ class TwitterCommand(AbstractCommand):
             subscribers = twitter_db.get_subscribers(user)
             if subscribers is not None:
                 followers.append(subscribers)
-        i = 1
-        sorted_followers = sorted(followers, key=attrgetter('pct_week'), reverse=True)[:20]
-        text = '*Twitter users (top 20, by weekly growth) {}:*\n'.format(stringformat.emoji('charts'))
-        for s in sorted_followers:
-            text += '    {}. *{}*: {} (W: {}, M: {})\n'.format(i, s.name, s.now, stringformat.percent(s.pct_week, emo=False), stringformat.percent(s.pct_month, emo=False))
-            i += 1
+        if len(followers) > 0:
+            i = 1
+            sorted_followers = sorted(followers, key=attrgetter('pct_week'), reverse=True)[:20]
+            text = '*Twitter users (top 20, by weekly growth) {}:*\n'.format(stringformat.emoji('charts'))
+            for s in sorted_followers:
+                text += '    {}. *{}*: {} (W: {}, M: {})\n'.format(i, s.name, s.now, stringformat.percent(s.pct_week, emo=False), stringformat.percent(s.pct_month, emo=False))
+                i += 1
+        else:
+            text = 'No Twitter data available.'
 
         await bot.post_message(text, channel)
 
@@ -446,12 +449,15 @@ class RedditCommand(AbstractCommand):
             subscribers = reddit_db.get_subscribers(tracked_subreddit)
             if subscribers is not None:
                 subs.append(subscribers)
-        i = 1
-        sorted_subs = sorted(subs, key=attrgetter('pct_week'), reverse=True)[:20]
-        text = '*Reddit communities (top 20, by weekly growth) {}:*\n'.format(stringformat.emoji('charts'))
-        for s in sorted_subs:
-            text += '    {}. *{}*: {} (W: {}, M: {})\n'.format(i, s.name, s.now, stringformat.percent(s.pct_week, emo=False), stringformat.percent(s.pct_month, emo=False))
-            i += 1
+        if len(subs) > 0:
+            i = 1
+            sorted_subs = sorted(subs, key=attrgetter('pct_week'), reverse=True)[:20]
+            text = '*Reddit communities (top 20, by weekly growth) {}:*\n'.format(stringformat.emoji('charts'))
+            for s in sorted_subs:
+                text += '    {}. *{}*: {} (W: {}, M: {})\n'.format(i, s.name, s.now, stringformat.percent(s.pct_week, emo=False), stringformat.percent(s.pct_month, emo=False))
+                i += 1
+        else:
+            text += 'No Reddit data available.'
 
         await bot.post_message(text, channel)
 
