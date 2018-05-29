@@ -1,45 +1,50 @@
-# HODLMyBot
-Telegram bot with a wide variety of features related to crypto currency.
+# HODL My Bot 🍺
+ChatBot with a wide variety of features related to crypto currency.
 
-## Commands
+## Supported platforms 🖥
+This bot currently works with Slack (`hodlmybot-slack.py`), Telegram (`hodlmybot-telegram.py`) and Discord (`hodlmybot-discord.py`).
+
+## Commands 🤖
 ```
 This bot currently supports the following commands:
-    Help:
-    /help - This help
-
-    Tools:
-    /search - Search for coin
-    /webpage <coin> - Link to coin webpage
-    /mcap - Total market cap
-    /usd <coin> - USD value of <coin>
-    /stats [<coin>] - Global core metrics or metrics of <coin>
-    /ico <coin> - Get ICO info
-    /convert <amount> <from coin> <to coin> - Coin conversion
-    /compare <coin1> <coin2> - Compare two coins
-
-    Watchers:
-    /marketwatch [<threshold (%)> <interval (sec)>]|stop - Set threshold and interval for market watcher or stop
-    /moonwatch [<threshold (%)> <interval (sec)>]|stop - Set threshold and interval for mooning coins
-
-    Intel:
-    /airdrops - List of upcoming airdrops
-    /reddit [add|del <subreddit> or list] - Add or list Reddit followers
-    /twitter [add|del <user> or list] - Add or list Twitter followers
-
-    Fun:
-    /hodl - Helps you decide whether or not to HODL
-    /fomo - When you have FOMO
-    /fud - No FUD
-    /carlos - CARLOS MATOS!
+    /about - A little bit about myself
+    /find <query> - Search for a token
+    /f <query> - Search for a token
+    /search <query> - Search for a token
+    /stats [<token>] - Global metrics, or metrics of <token>
+    /s [<token>] - Global metrics, or metrics of <token>
+    /logo <token> - Show token logo
+    /l <token> - Show token logo
+    /usd <token> - Convert <token> to USD
+    /u <token> - Convert <token> to USD
+    /convert <amount> <from> <to> - Convert between tokens
+    /conv <amount> <from> <to> - Convert between tokens
+    /compare <token1> <token2> - Compare two tokens
+    /comp <token1> <token2> - Compare two tokens
+    /mcap - Show a breakdown of total mcap
+    /m - Show a breakdown of total mcap
+    /topmcap - List top 20 mcap tokens
+    /tm - List top 20 mcap tokens
+    /ico <token> - Get ICO info
+    /web <token> - Link to token webpage
+    /w <token> - Link to token webpage
+    /airdrop - List of upcoming airdrops
+    /twitter - [add|del <user>] - Add or list followers
+    /reddit - [add|del <subreddit>] - Add or list subscribers
+    /hodl - When you need to hear that voice of reason
+    /fomo - When you have that FOMO
+    /fud - When you suffer from FUD
+    /carlos - Bitconnneeeeeeeeeect!
     /rackle - The Crazy Racklehahn
-    /shouldi - Helps you decide
+    /yn - For moments of unvertainty
     /diceroll - Throw 1d6
+    /dice - Throw 1d6
 ```
 
-## Required dependencies
+## Required dependencies ⚙️
 To install required dependencies, run `pip install -r requirements.txt`. Running the bot in a venv is recommended (see Installation)
 
-## Installation
+## Installation 📲
 This installation procedure assumes a Debian based system, but should work fine on other distros as well.
 It was developed and tested on Ubuntu 17.10.
 
@@ -52,18 +57,31 @@ It was developed and tested on Ubuntu 17.10.
 1. Set your access token (see **Credentials**)
 1. Reboot or start the service manually:
     ```
-    $ sudo systemctl start hodlmybot
-    $ sudo systemctl status hodlmybot
+    $ sudo systemctl start hodlmybot-slack
+    $ sudo systemctl start hodlmybot-telegram
+    $ sudo systemctl status hodlmybot-slack
+    $ sudo systemctl status hodlmybot-telegram
+    $ sudo systemctl status hodlmybot-dischord
+    $ sudo systemctl status hodlmybot-dischord
+    ```
 
-## Credentials
-In order to actually run your bot on Telegram, you will need to have an access token, and put it in `api-creds-telegram.json`:
+## Credentials 👀
+In order to actually run your bot on Telegram and Slack, you will need to have set up your bots and have their access tokens, and put them in `api-creds-bot.json`:
 ```
 {
-	"access_token": "YOUR_ACCESS_TOKEN"
+    "slack" : {
+        "access_token": "YOUR_SLACK_ACCESS_TOKEN"
+    },
+    "telegram" : {
+        "access_token": "YOUR_TELEGRAM_ACCESS_TOKEN"
+    },
+    "discord" : {
+        "access_token": ""
+    }
 }
 ```
 
-To have access to the twitter functionality you need to create `api-creds-twitter.json`:
+To have access to the Twitter functionality, you need access to their API and enter the details in `api-creds-twitter.json`:
 ```
 {
 	"consumer_key": "YOUR_CONSUMER_KEY",
@@ -73,14 +91,14 @@ To have access to the twitter functionality you need to create `api-creds-twitte
 }
 ```
 
-## Updating historical data
-The bot works best if it can continuously poll the latest data from several sources, and import them into the database in the form of historical data. For this purpose there are a few scripts can be added to `cron`.
+## Updating historical data 📊
+The bot works best if it can continuously poll the latest data from several sources, and import them into the database in the form of historical data. For this purpose you have the `updater.py` script in `hodlcore` to be used with `cron`.
 
 ### CoinMarketCap
-Use `cron-cmc.py` to import the latest data from Coinmarketcap, which becomes the historical data used for token metrics. You must run this at least once.
+Imports the latest data from Coinmarketcap, which becomes the historical data used for token metrics.
 
 ### Twitter
-Use `cron-twitter.py` to gather historical followers metrics from the tracked twitter accounts. You must run this at least once. There is a default set of accounts that will be tracked, and to update these based on the currently top ranked tokens, run `cron-twitter-update.py`.
+Gathers historical followers metrics from the tracked twitter accounts.
 
 ### Reddit
-Use `cron-reddit.py` to gather historical subscribers metrics from the tracked Reddit subreddits. You must run this at least once. There is a default set of subreddits that will be tracked, and to update these based on the currently top ranked tokens, run `cron-reddit-update.py`.
+Gather historical subscribers metrics from the tracked Reddit subreddits. 

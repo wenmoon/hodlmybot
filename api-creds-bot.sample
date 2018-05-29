@@ -1,0 +1,11 @@
+{
+	"slack" : {
+		"access_token": ""
+	},
+	"telegram" : {
+		"access_token": ""
+	},
+	"discord" : {
+		"access_token": ""
+	}
+}
