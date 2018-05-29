@@ -354,12 +354,14 @@ class TopMCAPCommand(AbstractCommand):
             summary = token_db.get_mcaps(token.id)
             if summary is not None:
                 mcaps.append(summary)
-
-        i = 1
-        sorted_mcaps = sorted(mcaps, key=attrgetter('pct_week'), reverse=True)[:20]
-        for m in sorted_mcaps:
-            text += '\t{}. *{}*: {} (W:{}, M:{})\n'.format(i, m.name, m.now, stringformat.percent(m.pct_week, emo=False), stringformat.percent(m.pct_month, emo=False))
-            i += 1
+        if len(mcaps) > 0:
+            i = 1
+            sorted_mcaps = sorted(mcaps, key=attrgetter('pct_week'), reverse=True)[:20]
+            for m in sorted_mcaps:
+                text += '\t{}. *{}*: {} (W:{}, M:{})\n'.format(i, m.name, m.now, stringformat.percent(m.pct_week, emo=False), stringformat.percent(m.pct_month, emo=False))
+                i += 1
+        else:
+            text = 'Missing historical mcap data for top tokens.'
 
         await bot.post_message(text, channel)
 
