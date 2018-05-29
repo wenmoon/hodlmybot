@@ -1,7 +1,7 @@
 [
-	{
-		"name": "fomo",
-		"images": [
+    {
+        "name": "fomo",
+        "images": [
             "http://recruitingdaily.com/wp-content/uploads/sites/6/2017/10/fomo1.jpg",
             "https://4.bp.blogspot.com/-AlE0-SaJD9o/VxQa79mwrQI/AAAAAAABp4g/wLAX-ziiVFACgL-EC5aFJI4NNFYdfhfigCLcB/s1600/FOMO.png",
             "http://www.fomofestival.com.au/wp-content/uploads/2017/07/logo.png",
@@ -14,11 +14,11 @@
             "https://s3.amazonaws.com/ns.images/newspring/collection/series_fuse/web.fightingfomo_promo.2x1.jpg",
             "https://i.amz.mshcdn.com/lUiSMH_1GICPM2TblSbwtCt09BI=/950x534/filters:quality(90)/2013%2F07%2F09%2F81%2FSocialNetwo.3f53a.jpg"
         ],
-		"usage": "When you have that FOMO"
-	},
-	{
-		"name": "fud",
-		"images": [
+        "usage": "When you have that FOMO"
+    },
+    {
+        "name": "fud",
+        "images": [
             "https://cdn-images-1.medium.com/max/827/1*ulMcUA-Kmbk5vBw3vIobVw.png",
             "https://www.smallcapasia.com/wp-content/uploads/2017/09/crypto-lingo.jpg",
             "https://res.cloudinary.com/teepublic/image/private/s--tvWB4gBj--/t_Preview/b_rgb:ffffff,c_limit,f_jpg,h_630,q_90,w_630/v1516580235/production/designs/2297248_0.jpg",
@@ -29,10 +29,10 @@
             "https://i.kinja-img.com/gawker-media/image/upload/t_original/rnhmsghfmdzpprsfvcfu.gif"
         ],
         "usage": "When you suffer from FUD"
-	},
-	{
-		"name": "hodl",
-		"images": [
+    },
+    {
+        "name": "hodl",
+        "images": [
             "http://i0.kym-cdn.com/photos/images/newsfeed/001/325/560/cbc.jpg",
             "https://i.redd.it/23hgyh92wtaz.jpg",
             "https://i.imgur.com/vWUqfc1.jpg",
@@ -44,10 +44,10 @@
             "https://i.redd.it/fvh3ibzxz8kz.jpg"
         ],
         "usage": "When you need to hear that voice of reason"
-	},
-	{
-		"name": "carlos",
-		"images": [
+    },
+    {
+        "name": "carlos",
+        "images": [
             "https://i.warosu.org/data/biz/img/0066/59/1516312521744.gif",
             "https://everipedia-storage.s3-accelerate.amazonaws.com/ProfilePics/carlos-matos__02520.gif",
             "https://thumbs.gfycat.com/PleasedEducatedGalah-size_restricted.gif",
@@ -59,16 +59,16 @@
             "https://thumbs.gfycat.com/DelayedSillyImpala-size_restricted.gif",
             "https://thumbs.gfycat.com/MeaslySpecificHarrierhawk-size_restricted.gif"
         ],
-		"usage": "Bitconnneeeeeeeeect!"
-	},
-	{
-		"name": "rackle",
-		"images": [
+        "usage": "Bitconnneeeeeeeeect!"
+    },
+    {
+        "name": "rackle",
+        "images": [
             "https://media.giphy.com/media/4PUj9Ueww5tlrhC8ET/giphy.gif",
             "https://media.giphy.com/media/9Dg89jzSNeojyGDCpg/giphy.gif",
             "https://media.giphy.com/media/hTEtcqdYpadJwnTPLo/giphy.gif",
             "https://media.giphy.com/media/fs9B75LDKNXdkHASCB/giphy.gif"
         ],
-		"usage": "The Crazy Racklehahn"
-	}
+        "usage": "The Crazy Racklehahn"
+    }
 ]
